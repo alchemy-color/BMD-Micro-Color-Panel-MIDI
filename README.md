@@ -1,5 +1,7 @@
 # BMD Micro Color Panel MIDI Controller
 
+![Screenshot](screenshot.png)
+
 A web-based GUI editor with MIDI output for the BlackMagic DaVinci Resolve Micro Color Panel.
 
 ## Features
