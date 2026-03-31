@@ -4,6 +4,8 @@
 
 A web-based GUI editor with MIDI output for the BlackMagic DaVinci Resolve Micro Color Panel.
 
+> **Inspiration**: This project is a derivative of [micro-color-panel-controller](https://github.com/ra100/micro-color-panel-controller) by [ra100](https://github.com/ra100). That project provided the foundation for reverse-engineering the panel's HID protocol.
+
 ## Features
 
 - **USB HID Control** - Connects directly to BMD Micro Color Panel (USB PID 0xda0f)
