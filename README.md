@@ -114,6 +114,12 @@ Adjust sensitivity and mapping in the UI panels:
 
 ## Known Issues & Limitations
 
+### Rotary Encoders
+- **Not working yet** - Rotary encoders (12 knobs) are not yet functional. The HID report parsing needs debugging to properly detect rotation and direction.
+
+### Speed Scale
+- **Not working yet** - The speed scale sliders (0.1x-5x) are present in the UI but not affecting MIDI output. The velocity scaling logic needs to be applied to the control data.
+
 ### Wheels
 - **Direction detection incomplete** - The wheel delta detection works but only registers -1 regardless of turn direction. The raw values show alternating patterns that haven't been fully resolved into reliable left/right differentiation.
 

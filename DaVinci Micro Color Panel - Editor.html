@@ -168,8 +168,28 @@
             padding: 12px;
             margin-bottom: 12px;
         }
-        
-        .panel-section h3 { font-size: 13px; color: #fea701; margin-bottom: 10px; }
+
+        .panel-section.collapsed { padding-bottom: 0; }
+        .panel-section.collapsed .panel-content { display: none; }
+
+        .panel-section h3 {
+            font-size: 13px;
+            color: #fea701;
+            margin-bottom: 10px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+
+        .panel-section h3::after {
+            content: '▼';
+            font-size: 10px;
+            transition: transform 0.2s;
+        }
+
+        .panel-section.collapsed h3::after { transform: rotate(-90deg); }
         
         .control-list { display: flex; flex-direction: column; gap: 4px; max-height: 300px; overflow-y: auto; }
         
@@ -221,8 +241,25 @@
             margin-top: 10px;
             display: flex;
             justify-content: center;
-            gap: 8px;
+            gap: 30px;
             padding: 8px;
+        }
+        .mode-bar button {
+            background: #333;
+            border: 1px solid #555;
+            color: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            padding: 12px 24px;
+            font-size: 14px;
+        }
+        .mode-bar button:hover { background: #444; }
+        .mode-bar button.active {
+            background: #fea701;
+            color: #000;
+            border-color: #fea701;
+            box-shadow: 0 0 8px 2px rgba(254, 167, 1, 0.5);
         }
     </style>
 </head>
@@ -239,16 +276,19 @@
     <div class="main-area">
         <div class="side-panel left-sidebar">
             <div class="panel-section">
-                <h3>Label Presets</h3>
+                <h3 onclick="togglePanel(this)">Label Presets</h3>
+                <div class="panel-content">
                 <div class="row" style="margin-top: 4px; margin-bottom: 15px;">
                     <button onclick="saveLayoutManager()" class="primary">Save</button>
                     <button onclick="exportLayoutManager()">Export</button>
+                    <button onclick="loadLayoutPreset('Default Layout')">Reset</button>
                 </div>
                 <div class="preset-list" id="layoutList">Loading...</div>
-                <div class="status-note">Load `Default` to reset names.</div>
+                </div>
             </div>
             <div class="panel-section">
-                <h3>Calibration</h3>
+                <h3 onclick="togglePanel(this)">Calibration</h3>
+                <div class="panel-content">
                 <div class="section-subtitle">Wheel 360</div>
                 <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
                     <select id="calWheelId" style="flex:1;padding:5px;background:#333;border:1px solid #555;color:#fff;border-radius:4px;">
@@ -293,10 +333,12 @@
                     <button onclick="saveCalibrationToStorage()" class="primary">Save</button>
                     <button onclick="resetCalibrationDefaults()">Reset</button>
                 </div>
+                </div>
             </div>
 
             <div class="panel-section">
-                <h3>Speed Scales</h3>
+                <h3 onclick="togglePanel(this)">Speed Scales</h3>
+                <div class="panel-content">
                 
                 <div class="section-subtitle">Rotary Encoders (0.1x - 5x)</div>
                 <div id="rotarySpeedControls" style="margin-bottom:10px;">
@@ -374,14 +416,17 @@
                 <button onclick="resetAllSpeedScales('ball')" style="padding:4px 10px;width:100%;margin-bottom:12px;">Reset All Balls</button>
 
                 <button onclick="resetAllSpeedScales('all')" class="primary" style="padding:6px 10px;width:100%;">Reset All Speeds</button>
+                </div>
             </div>
 
             <div class="panel-section">
-                <h3>Event Log</h3>
+                <h3 onclick="togglePanel(this)">Event Log</h3>
+                <div class="panel-content">
                 <div style="display:flex;justify-content:flex-start;margin:4px 0;">
                     <button onclick="document.getElementById('eventLog').innerHTML=''" style="padding:2px 8px;font-size:10px;">Clear</button>
                 </div>
                 <div class="event-log" id="eventLog" style="height: 220px; overflow-y: auto; font-size: 10px;"></div>
+                </div>
             </div>
         </div>
 
@@ -483,24 +528,28 @@
                 <div id="controls2"></div>
             </div>
             <div class="mode-bar">
-                <button id="nameEditModeBtn" onclick="setEditMode('name')" style="padding: 8px 16px; font-size: 14px;">Label Edit</button>
-                <button id="midiEditModeBtn" onclick="setEditMode('midi')" style="padding: 8px 16px; font-size: 14px;">MIDI Map</button>
+                <button id="nameEditModeBtn" onclick="toggleEditMode('name')" style="padding: 12px 24px; font-size: 14px;">Label Edit</button>
+                <button id="midiEditModeBtn" onclick="toggleEditMode('midi')" style="padding: 12px 24px; font-size: 14px;">MIDI Map</button>
             </div>
         </div>
         
         <div class="side-panel right-sidebar">
             <div class="panel-section">
-                <h3>MIDI Presets</h3>
+                <h3 onclick="togglePanel(this)">MIDI Presets</h3>
+                <div class="panel-content">
                 <div style="margin-bottom: 15px;">
                     <button onclick="savePreset()" class="primary">Save</button>
                     <button onclick="exportPreset()">Export</button>
+                    <button onclick="loadPreset('default')">Reset</button>
                 </div>
                 <div class="preset-list" id="presetList">
                     Loading...
                 </div>
+                </div>
             </div>
             <div class="panel-section">
-                <h3>MIDI Options</h3>
+                <h3 onclick="togglePanel(this)">MIDI Options</h3>
+                <div class="panel-content">
                 <div class="row" style="margin-bottom: 8px;">
                     <button id="midiToggle" onclick="toggleMidi()" class="danger">MIDI OFF</button>
                 </div>
@@ -533,14 +582,17 @@
                 </div>
                 <div id="appleDlsStatus" class="status-note">Apple DLS Synth: off</div>
                 <div class="status-note">Click any SVG button/rotary to assign MIDI note</div>
+                </div>
             </div>
 
             <div class="panel-section">
-                <h3>MIDI Messages</h3>
+                <h3 onclick="togglePanel(this)">MIDI Messages</h3>
+                <div class="panel-content">
                 <div style="display:flex;justify-content:flex-start;align-items:center; margin: 4px 0 6px;">
                     <button onclick="document.getElementById('midiLog').innerHTML=''" style="padding:2px 8px;font-size:10px;">Clear</button>
                 </div>
                 <div class="event-log" id="midiLog" style="height: 220px; overflow-y: auto; font-size: 10px;"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -1799,6 +1851,11 @@
             if (logEl) prependLogLine(logEl, msg, 300);
         }
 
+        function togglePanel(header) {
+            const section = header.closest('.panel-section');
+            section.classList.toggle('collapsed');
+        }
+
         function prependLogLine(el, msg, maxLines) {
             const lines = el.innerHTML.split('<br>').filter(Boolean);
             lines.unshift(msg);
@@ -2018,7 +2075,7 @@
                 const label = document.createElement('div');
                 label.className = 'svg-label';
                 label.style.position = 'absolute';
-                label.style.color = '#fff';
+                label.style.color = activeEditMode === 'name' ? '#fea701' : '#fff';
                 label.style.fontWeight = 'bold';
                 label.style.fontFamily = '-apple-system, BlinkMacSystemFont, sans-serif';
                 label.style.pointerEvents = 'none';
@@ -2148,14 +2205,15 @@
             ws.send(JSON.stringify({ type: 'setMidiChannel', value: Number(value) }));
         }
 
-        function setEditMode(mode) {
-            activeEditMode = activeEditMode === mode ? 'off' : mode;
-            const nameBtn = document.getElementById('nameEditModeBtn');
-            const midiBtn = document.getElementById('midiEditModeBtn');
-
-            if (nameBtn) nameBtn.className = activeEditMode === 'name' ? 'primary' : '';
-            if (midiBtn) midiBtn.className = activeEditMode === 'midi' ? 'primary' : '';
-
+        function toggleEditMode(mode) {
+            if (activeEditMode === mode) {
+                activeEditMode = 'off';
+            } else {
+                activeEditMode = mode;
+            }
+            document.getElementById('nameEditModeBtn').classList.toggle('active', activeEditMode === 'name');
+            document.getElementById('midiEditModeBtn').classList.toggle('active', activeEditMode === 'midi');
+            log('Edit mode: ' + activeEditMode);
             addSvgLabels();
             refreshSvgAssignmentHints();
         }
@@ -2197,7 +2255,9 @@
         function renderLayouts(layoutNames, current) {
             const container = document.getElementById('layoutList');
             if (!container) return;
-            container.innerHTML = layoutNames.map(name =>
+            // Filter out Default Layout from the list since it has its own Reset button
+            const filteredNames = layoutNames.filter(name => name !== DEFAULT_LAYOUT_NAME);
+            container.innerHTML = filteredNames.map(name =>
                 '<div class="preset-item">' +
                 '<span>' + name + (name === current ? ' (active)' : '') + '</span>' +
                 '<div style="display:flex;gap:4px;">' +
@@ -2380,7 +2440,9 @@
 function renderPresets(presetsList, current) {
             const container = document.getElementById('presetList');
             if (!container) return;
-            container.innerHTML = presetsList.map(p => 
+            // Filter out 'default' from the list since it has its own Reset button
+            const filteredList = presetsList.filter(p => p !== 'default');
+            container.innerHTML = filteredList.map(p => 
                 '<div class="preset-item">' +
                 '<span>' + p + (p === current ? ' (active)' : '') + '</span>' +
                 '<div style="display:flex;gap:4px;">' +
