@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<!-- saved from url=(0022)http://localhost:8766/ -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DaVinci Micro Color Panel - Editor</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background: #1a1a1a;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        h1 { font-size: 20px; color: #fea701; }
+        
+        .toolbar { display: flex; gap: 8px; flex-wrap: wrap; }
+        
+        button {
+            padding: 8px 14px;
+            background: #333;
+            border: 2px solid #555;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        
+        button:hover { background: #444; border-color: #fea701; }
+        button.primary { background: #fea701; color: #000; border-color: #fea701; }
+        button.danger { border-color: #c62828; }
+        
+        .main-area { display: flex; gap: 15px; flex: 1; min-height: 0; }
+        
+        .left-area { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+        
+        .canvas-area {
+            background: #222;
+            border-radius: 8px;
+            position: relative;
+            flex: 1;
+            overflow: auto;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+        }
+        
+        .panel-wrapper {
+            position: relative;
+            width: 1400px;
+            margin: 0 auto;
+            padding: 100px 20px;
+            flex-shrink: 0;
+        }
+        
+        .panel-svg {
+            display: block;
+            width: 1400px;
+            height: auto;
+            margin: 0 auto;
+        }
+        
+        .controls-area {
+            background: #222;
+            border-radius: 8px;
+            position: relative;
+            flex: 1;
+            display: none;
+        }
+        
+        .control {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            cursor: move;
+            user-select: none;
+            z-index: 10;
+        }
+        
+        .control:hover { box-shadow: 0 0 10px #fea701; }
+        .control.selected { box-shadow: 0 0 15px #fea701; z-index: 20; }
+        
+        /* Trackball - ring with ball inside */
+        .trackball {
+            border-radius: 50%;
+            background: transparent !important;
+            border: none;
+            box-shadow: inset 0 0 0 36px #ffb74d !important;
+        }
+        
+        .trackball::before {
+            content: '';
+            position: absolute;
+            width: 50%;
+            height: 50%;
+            border-radius: 50%;
+            background: rgba(79, 195, 247, 0.4);
+            border: 2px solid #4fc3f7;
+        }
+        
+        .trackball.active::before { background: rgba(79, 195, 247, 0.8); border-color: #4fc3f7; }
+        
+        .trackball::after {
+            content: attr(data-label);
+            position: absolute;
+            bottom: -20px;
+            font-size: 12px;
+            font-weight: bold;
+            color: #81c784;
+        }
+        
+        /* Rotary - ring with button inside */
+        .rotary {
+            border-radius: 50%;
+            background: transparent !important;
+            border: 9px solid #ffb74d;
+            box-shadow: none !important;
+        }
+        
+        .rotary::before {
+            content: '';
+            position: absolute;
+            width: 78%;
+            height: 78%;
+            border-radius: 50%;
+            background: rgba(79, 195, 247, 0.4);
+            border: 2px solid #4fc3f7;
+        }
+        
+        .rotary.active::before { background: rgba(79, 195, 247, 0.8); border-color: #4fc3f7; }
+        
+        /* Button - rectangle */
+        .button { 
+            border-radius: 3px; 
+            background: rgba(79, 195, 247, 0.3); 
+            border: 2px solid #4fc3f7; 
+        }
+        
+        .button.active { 
+            background: rgba(79, 195, 247, 0.8); 
+            border-color: #fff; 
+        }
+        
+        .side-panel { width: 280px; display: flex; flex-direction: column; }
+        
+        .panel-section {
+            background: #222;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .panel-section h3 { font-size: 13px; color: #fea701; margin-bottom: 10px; }
+        
+        .control-list { display: flex; flex-direction: column; gap: 4px; max-height: 300px; overflow-y: auto; }
+        
+        .control-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 3px 6px;
+            background: #333;
+            border-radius: 3px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+        
+        .control-item:hover { background: #444; }
+        .control-item.selected { background: #fea701; color: #000; }
+        .control-item span { font-family: monospace; color: #888; font-size: 9px; }
+        
+        .prop-row { display: flex; gap: 8px; margin-bottom: 8px; }
+        .prop-row label { width: 50px; font-size: 12px; color: #888; }
+        .prop-row input { flex: 1; padding: 4px 8px; background: #333; border: 1px solid #555; border-radius: 4px; color: #fff; font-size: 12px; }
+        
+        .event-log {
+            background: #1a1a1a;
+            border-radius: 6px;
+            padding: 10px;
+            min-height: 20px;
+            font-family: monospace;
+            font-size: 11px;
+            color: #ffb74d;
+        }
+        
+        .status { padding: 6px 12px; background: #333; border-radius: 20px; font-size: 12px; }
+        .status.connected { background: #2e7d32; }
+        .status.disconnected { background: #c62828; }
+        
+        .preset-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
+        .preset-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #333; border-radius: 6px; }
+        .preset-item button { padding: 4px 12px; }
+        .preset-item .active { background: #fea701; color: #000; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div style="display:flex;align-items:center;gap:15px;">
+            <h1>DaVinci Micro Color Panel</h1>
+            <div class="status connected" id="status">Connected</div>
+        </div>
+            <div class="toolbar">
+            </div>
+    </div>
+    
+    <div class="main-area">
+        <div class="left-area">
+            <div class="canvas-area">
+                <div class="panel-wrapper" id="panelWrapper">
+                    <svg class="panel-svg" id="panelSvg" viewBox="87.085 132.541 360.672 181.163">
+                        <defs>
+                            <clippath id="clip_57">
+                            <path transform="matrix(.1,0,0,-.1,0,841.89)" d="M1192.9 3062.2C1185.8 3062.2 1180.06 3056.46 1180.06 3049.38V1277C1180.06 1269.92 1185.8 1264.17 1192.9 1264.17H4759.87C4766.95 1264.17 4772.7 1269.92 4772.7 1277V3049.38C4772.7 3056.46 4766.95 3062.2 4759.87 3062.2Z"></path>
+                            </clippath>
+                            <clippath id="clip_112">
+                            <path transform="matrix(.1,0,0,-.1,0,841.89)" d="M1192.9 3062.2C1185.8 3062.2 1180.06 3056.46 1180.06 3049.38V1277C1180.06 1269.92 1185.8 1264.17 1192.9 1264.17H4759.87C4766.95 1264.17 4772.7 1269.92 4772.7 1277V3049.38C4772.7 3056.46 4766.95 3062.2 4759.87 3062.2Z"></path>
+                            </clippath>
+                            <style>
+                            .active-svg { fill: #4fc3f7 !important; }
+                            .svg-label { font-family: -apple-system, BlinkMacSystemFont, sans-serif; fill: #fff; pointer-events: none; font-weight: bold; }
+                            .svg-label-small { font-size: 2.5px; }
+                            .svg-label-med { font-size: 3px; }
+                            </style>
+                        </defs>
+                        <g clip-path="url(#clip_57)" transform="matrix(1, 0, 0, 1, -30.094, -402.563995)">
+                            <path id="svg-bg" d="M 461.824 535.669 L 133.454 535.669 C 124.958 535.669 118.006 542.62 118.006 551.116 L 118.006 700.026 C 118.006 708.522 124.958 715.473 133.454 715.473 L 461.824 715.473 C 470.32 715.473 477.271 708.522 477.271 700.026 L 477.271 551.116 C 477.271 542.62 470.32 535.669 461.824 535.669" style="fill: rgb(47, 47, 47);"></path>
+                        </g>
+                        <g transform="matrix(1, 0, 0, 1, -30.094175, -402.56369)">
+                            <title>BUTTONS</title>
+                            <path id="svg-btn-12" d="M 145.561 592.333 L 131.051 592.333 C 130.528 592.333 130.1 592.76 130.1 593.283 L 130.1 602.483 C 130.1 603.006 130.528 603.435 131.051 603.435 L 145.561 603.435 C 146.084 603.435 146.512 603.006 146.512 602.483 L 146.512 593.283 C 146.512 592.76 146.084 592.333 145.561 592.333 Z" style="fill: rgb(26, 26, 26);"><title>AUTO COLOR</title></path>
+                            <path id="svg-btn-13" d="M 165.301 592.333 L 150.791 592.333 C 150.268 592.333 149.84 592.76 149.84 593.283 L 149.84 602.483 C 149.84 603.006 150.268 603.435 150.791 603.435 L 165.301 603.435 C 165.824 603.435 166.252 603.006 166.252 602.483 L 166.252 593.283 C 166.252 592.76 165.824 592.333 165.301 592.333 Z" style="fill: rgb(26, 26, 26);"><title>OFFSET</title></path>
+                            <path id="svg-btn-14" d="M 145.561 607.125 L 131.051 607.125 C 130.528 607.125 130.1 607.552 130.1 608.076 L 130.1 617.276 C 130.1 617.799 130.528 618.227 131.051 618.227 L 145.561 618.227 C 146.084 618.227 146.512 617.799 146.512 617.276 L 146.512 608.076 C 146.512 607.552 146.084 607.125 145.561 607.125 Z" style="fill: rgb(26, 26, 26);"><title>COPY</title></path>
+                            <path id="svg-btn-15" d="M 165.301 607.125 L 150.791 607.125 C 150.268 607.125 149.84 607.552 149.84 608.076 L 149.84 617.276 C 149.84 617.799 150.268 618.227 150.791 618.227 L 165.301 618.227 C 165.824 618.227 166.252 617.799 166.252 617.276 L 166.252 608.076 C 166.252 607.552 165.824 607.125 165.301 607.125 Z" style="fill: rgb(26, 26, 26);"><title>PASTE</title></path>
+                            <path id="svg-btn-16" d="M 145.561 621.917 L 131.051 621.917 C 130.528 621.917 130.1 622.345 130.1 622.868 L 130.1 632.068 C 130.1 632.591 130.528 633.02 131.051 633.02 L 145.561 633.02 C 146.084 633.02 146.512 632.591 146.512 632.068 L 146.512 622.868 C 146.512 622.345 146.084 621.917 145.561 621.917 Z" style="fill: rgb(26, 26, 26);"><title>UNDO</title></path>
+                            <path id="svg-btn-17" d="M 165.301 621.917 L 150.791 621.917 C 150.268 621.917 149.84 622.345 149.84 622.868 L 149.84 632.068 C 149.84 632.591 150.268 633.02 150.791 633.02 L 165.301 633.02 C 165.824 633.02 166.252 632.591 166.252 632.068 L 166.252 622.868 C 166.252 622.345 165.824 621.917 165.301 621.917 Z" style="fill: rgb(26, 26, 26);"><title>REDO</title></path>
+                            <path id="svg-btn-18" d="M 145.561 636.709 L 131.051 636.709 C 130.528 636.709 130.1 637.137 130.1 637.66 L 130.1 646.86 C 130.1 647.383 130.528 647.812 131.051 647.812 L 145.561 647.812 C 146.084 647.812 146.512 647.383 146.512 646.86 L 146.512 637.66 C 146.512 637.137 146.084 636.709 145.561 636.709 Z" style="fill: rgb(26, 26, 26);"><title>DELETE</title></path>
+                            <path id="svg-btn-19" d="M 165.301 636.709 L 150.791 636.709 C 150.268 636.709 149.84 637.137 149.84 637.66 L 149.84 646.86 C 149.84 647.383 150.268 647.812 150.791 647.812 L 165.301 647.812 C 165.824 647.812 166.252 647.383 166.252 646.86 L 166.252 637.66 C 166.252 637.137 165.824 636.709 165.301 636.709 Z" style="fill: rgb(26, 26, 26);"><title>RESET</title></path>
+                            <path id="svg-btn-20" d="M 145.561 651.501 L 131.051 651.501 C 130.528 651.501 130.1 651.929 130.1 652.452 L 130.1 661.652 C 130.1 662.175 130.528 662.604 131.051 662.604 L 145.561 662.604 C 146.084 662.604 146.512 662.175 146.512 661.652 L 146.512 652.452 C 146.512 651.929 146.084 651.501 145.561 651.501 Z" style="fill: rgb(26, 26, 26);"><title>BYPASS</title></path>
+                            <path id="svg-btn-21" d="M 165.301 651.501 L 150.791 651.501 C 150.268 651.501 149.84 651.929 149.84 652.452 L 149.84 661.652 C 149.84 662.175 150.268 662.604 150.791 662.604 L 165.301 662.604 C 165.824 662.604 166.252 662.175 166.252 661.652 L 166.252 652.452 C 166.252 651.929 165.824 651.501 165.301 651.501 Z" style="fill: rgb(26, 26, 26);"><title>DISABLE</title></path>
+                            <path id="svg-btn-22" d="M 145.561 672.347 L 131.051 672.347 C 130.528 672.347 130.1 672.775 130.1 673.298 L 130.1 682.498 C 130.1 683.021 130.528 683.45 131.051 683.45 L 145.561 683.45 C 146.084 683.45 146.512 683.021 146.512 682.498 L 146.512 673.298 C 146.512 672.775 146.084 672.347 145.561 672.347 Z" style="fill: rgb(26, 26, 26);"><title>USER</title></path>
+                            <path id="svg-btn-23" d="M 165.301 672.347 L 150.791 672.347 C 150.268 672.347 149.84 672.775 149.84 673.298 L 149.84 682.498 C 149.84 683.021 150.268 683.45 150.791 683.45 L 165.301 683.45 C 165.824 683.45 166.252 683.021 166.252 682.498 L 166.252 673.298 C 166.252 672.775 165.824 672.347 165.301 672.347 Z" style="fill: rgb(26, 26, 26);"><title>LOOP</title></path>
+                            <path id="svg-btn-24" d="M 145.505 687.139 L 130.996 687.139 C 130.473 687.139 130.045 687.567 130.045 688.09 L 130.045 697.29 C 130.045 697.813 130.473 698.242 130.996 698.242 L 145.505 698.242 C 146.029 698.242 146.457 697.813 146.457 697.29 L 146.457 688.09 C 146.457 687.567 146.029 687.139 145.505 687.139 Z" style="fill: rgb(26, 26, 26);"><title>SHIFT DOWN</title></path>
+                            <path id="svg-btn-25" d="M 165.247 687.139 L 150.737 687.139 C 150.214 687.139 149.786 687.567 149.786 688.09 L 149.786 697.29 C 149.786 697.813 150.214 698.242 150.737 698.242 L 165.247 698.242 C 165.77 698.242 166.198 697.813 166.198 697.29 L 166.198 688.09 C 166.198 687.567 165.77 687.139 165.247 687.139 Z" style="fill: rgb(26, 26, 26);"><title>SHIFT UP</title></path>
+                            <path id="svg-btn-26" d="M 200.555 592.333 L 186.046 592.333 C 185.523 592.333 185.095 592.76 185.095 593.283 L 185.095 602.483 C 185.095 603.006 185.523 603.435 186.046 603.435 L 200.555 603.435 C 201.079 603.435 201.507 603.006 201.507 602.483 L 201.507 593.283 C 201.507 592.76 201.079 592.333 200.555 592.333 Z" style="fill: rgb(26, 26, 26);"><title>PLAY STILL</title></path>
+                            <path id="svg-btn-27" d="M 220.291 592.333 L 205.781 592.333 C 205.258 592.333 204.83 592.76 204.83 593.283 L 204.83 602.483 C 204.83 603.006 205.258 603.435 205.781 603.435 L 220.291 603.435 C 220.814 603.435 221.242 603.006 221.242 602.483 L 221.242 593.283 C 221.242 592.76 220.814 592.333 220.291 592.333 Z" style="fill: rgb(26, 26, 26);"><title>WIPE STILL</title></path>
+                            <path id="svg-btn-28" d="M 240.029 592.333 L 225.519 592.333 C 224.996 592.333 224.568 592.76 224.568 593.283 L 224.568 602.483 C 224.568 603.006 224.996 603.435 225.519 603.435 L 240.029 603.435 C 240.552 603.435 240.98 603.006 240.98 602.483 L 240.98 593.283 C 240.98 592.76 240.552 592.333 240.029 592.333 Z" style="fill: rgb(26, 26, 26);"><title>GRAB STILL</title></path>
+                            <path id="svg-btn-29" d="M 274.961 592.333 L 260.452 592.333 C 259.929 592.333 259.5 592.76 259.5 593.283 L 259.5 602.483 C 259.5 603.006 259.929 603.435 260.452 603.435 L 274.961 603.435 C 275.484 603.435 275.913 603.006 275.913 602.483 L 275.913 593.283 C 275.913 592.76 275.484 592.333 274.961 592.333 Z" style="fill: rgb(26, 26, 26);"><title>H/LITE</title></path>
+                            <path id="svg-btn-30" d="M 294.81 592.333 L 280.3 592.333 C 279.777 592.333 279.349 592.76 279.349 593.283 L 279.349 602.483 C 279.349 603.006 279.777 603.435 280.3 603.435 L 294.81 603.435 C 295.333 603.435 295.761 603.006 295.761 602.483 L 295.761 593.283 C 295.761 592.76 295.333 592.333 294.81 592.333 Z" style="fill: rgb(26, 26, 26);"><title>VIEWER</title></path>
+                            <path id="svg-btn-31" d="M 314.659 592.333 L 300.149 592.333 C 299.626 592.333 299.198 592.76 299.198 593.283 L 299.198 602.483 C 299.198 603.006 299.626 603.435 300.149 603.435 L 314.659 603.435 C 315.182 603.435 315.61 603.006 315.61 602.483 L 315.61 593.283 C 315.61 592.76 315.182 592.333 314.659 592.333 Z" style="fill: rgb(26, 26, 26);"><title>CURSOR</title></path>
+                            <path id="svg-btn-32" d="M 334.508 592.333 L 319.998 592.333 C 319.475 592.333 319.047 592.76 319.047 593.283 L 319.047 602.483 C 319.047 603.006 319.475 603.435 319.998 603.435 L 334.508 603.435 C 335.031 603.435 335.459 603.006 335.459 602.483 L 335.459 593.283 C 335.459 592.76 335.031 592.333 334.508 592.333 Z" style="fill: rgb(26, 26, 26);"><title>SELECT</title></path>
+                            <path id="svg-btn-33" d="M 285.036 607.084 L 270.527 607.084 C 270.004 607.084 269.575 607.512 269.575 608.035 L 269.575 617.235 C 269.575 617.758 270.004 618.187 270.527 618.187 L 285.036 618.187 C 285.559 618.187 285.988 617.758 285.988 617.235 L 285.988 608.035 C 285.988 607.512 285.559 607.084 285.036 607.084 Z" style="fill: rgb(26, 26, 26);"><title>RESET LIFT</title></path>
+                            <path id="svg-btn-34" d="M 304.774 607.084 L 290.264 607.084 C 289.741 607.084 289.313 607.512 289.313 608.035 L 289.313 617.235 C 289.313 617.758 289.741 618.187 290.264 618.187 L 304.774 618.187 C 305.297 618.187 305.725 617.758 305.725 617.235 L 305.725 608.035 C 305.725 607.512 305.297 607.084 304.774 607.084 Z" style="fill: rgb(26, 26, 26);"><title>RESET GAMMA</title></path>
+                            <path id="svg-btn-35" d="M 324.51 607.084 L 310 607.084 C 309.477 607.084 309.049 607.512 309.049 608.035 L 309.049 617.235 C 309.049 617.758 309.477 618.187 310 618.187 L 324.51 618.187 C 325.033 618.187 325.461 617.758 325.461 617.235 L 325.461 608.035 C 325.461 607.512 325.033 607.084 324.51 607.084 Z" style="fill: rgb(26, 26, 26);"><title>RESET GAIN</title></path>
+                            <path id="svg-btn-36" d="M 369.438 592.333 L 354.928 592.333 C 354.405 592.333 353.977 592.76 353.977 593.283 L 353.977 602.483 C 353.977 603.006 354.405 603.435 354.928 603.435 L 369.438 603.435 C 369.961 603.435 370.389 603.006 370.389 602.483 L 370.389 593.283 C 370.389 592.76 369.961 592.333 369.438 592.333 Z" style="fill: rgb(26, 26, 26);"><title>ADD NODE</title></path>
+                            <path id="svg-btn-37" d="M 389.175 592.333 L 374.664 592.333 C 374.141 592.333 373.713 592.76 373.713 593.283 L 373.713 602.483 C 373.713 603.006 374.141 603.435 374.664 603.435 L 389.175 603.435 C 389.697 603.435 390.125 603.006 390.125 602.483 L 390.125 593.283 C 390.125 592.76 389.697 592.333 389.175 592.333 Z" style="fill: rgb(26, 26, 26);"><title>ADD WINDOW</title></path>
+                            <path id="svg-btn-38" d="M 408.911 592.333 L 394.401 592.333 C 393.878 592.333 393.45 592.76 393.45 593.283 L 393.45 602.483 C 393.45 603.006 393.878 603.435 394.401 603.435 L 408.911 603.435 C 409.434 603.435 409.862 603.006 409.862 602.483 L 409.862 593.283 C 409.862 592.76 409.434 592.333 408.911 592.333 Z" style="fill: rgb(26, 26, 26);"><title>ADD KEYFRM</title></path>
+                            <path id="svg-btn-39" d="M 444.162 592.333 L 429.652 592.333 C 429.129 592.333 428.701 592.76 428.701 593.283 L 428.701 602.483 C 428.701 603.006 429.129 603.435 429.652 603.435 L 444.162 603.435 C 444.685 603.435 445.113 603.006 445.113 602.483 L 445.113 593.283 C 445.113 592.76 444.685 592.333 444.162 592.333 Z" style="fill: rgb(26, 26, 26);"><title>PREV STILL</title></path>
+                            <path id="svg-btn-40" d="M 463.904 592.333 L 449.393 592.333 C 448.87 592.333 448.443 592.76 448.443 593.283 L 448.443 602.483 C 448.443 603.006 448.87 603.435 449.393 603.435 L 463.904 603.435 C 464.427 603.435 464.854 603.006 464.854 602.483 L 464.854 593.283 C 464.854 592.76 464.427 592.333 463.904 592.333 Z" style="fill: rgb(26, 26, 26);"><title>NEXT STILL</title></path>
+                            <path id="svg-btn-41" d="M 444.162 607.125 L 429.652 607.125 C 429.129 607.125 428.701 607.552 428.701 608.076 L 428.701 617.276 C 428.701 617.799 429.129 618.227 429.652 618.227 L 444.162 618.227 C 444.685 618.227 445.113 617.799 445.113 617.276 L 445.113 608.076 C 445.113 607.552 444.685 607.125 444.162 607.125 Z" style="fill: rgb(26, 26, 26);"><title>PREV KEYFRM</title></path>
+                            <path id="svg-btn-42" d="M 463.904 607.125 L 449.393 607.125 C 448.87 607.125 448.443 607.552 448.443 608.076 L 448.443 617.276 C 448.443 617.799 448.87 618.227 449.393 618.227 L 463.904 618.227 C 464.427 618.227 464.854 617.799 464.854 617.276 L 464.854 608.076 C 464.854 607.552 464.427 607.125 463.904 607.125 Z" style="fill: rgb(26, 26, 26);"><title>NEXT KEYFRM</title></path>
+                            <path id="svg-btn-43" d="M 444.162 621.917 L 429.652 621.917 C 429.129 621.917 428.701 622.345 428.701 622.868 L 428.701 632.068 C 428.701 632.591 429.129 633.02 429.652 633.02 L 444.162 633.02 C 444.685 633.02 445.113 632.591 445.113 632.068 L 445.113 622.868 C 445.113 622.345 444.685 621.917 444.162 621.917 Z" style="fill: rgb(26, 26, 26);"><title>PREV NODE</title></path>
+                            <path id="svg-btn-44" d="M 463.904 621.917 L 449.393 621.917 C 448.87 621.917 448.443 622.345 448.443 622.868 L 448.443 632.068 C 448.443 632.591 448.87 633.02 449.393 633.02 L 463.904 633.02 C 464.427 633.02 464.854 632.591 464.854 632.068 L 464.854 622.868 C 464.854 622.345 464.427 621.917 463.904 621.917 Z" style="fill: rgb(26, 26, 26);"><title>NEXT NODE</title></path>
+                            <path id="svg-btn-45" d="M 444.162 636.709 L 429.652 636.709 C 429.129 636.709 428.701 637.137 428.701 637.66 L 428.701 646.86 C 428.701 647.383 429.129 647.812 429.652 647.812 L 444.162 647.812 C 444.685 647.812 445.113 647.383 445.113 646.86 L 445.113 637.66 C 445.113 637.137 444.685 636.709 444.162 636.709 Z" style="fill: rgb(26, 26, 26);"><title>PREV FRAME</title></path>
+                            <path id="svg-btn-46" d="M 463.904 636.709 L 449.393 636.709 C 448.87 636.709 448.443 637.137 448.443 637.66 L 448.443 646.86 C 448.443 647.383 448.87 647.812 449.393 647.812 L 463.904 647.812 C 464.427 647.812 464.854 647.383 464.854 646.86 L 464.854 637.66 C 464.854 637.137 464.427 636.709 463.904 636.709 Z" style="fill: rgb(26, 26, 26);"><title>NEXT FRAME</title></path>
+                            <path id="svg-btn-47" d="M 444.162 651.501 L 429.652 651.501 C 429.129 651.501 428.701 651.929 428.701 652.452 L 428.701 661.652 C 428.701 662.175 429.129 662.604 429.652 662.604 L 444.162 662.604 C 444.685 662.604 445.113 662.175 445.113 661.652 L 445.113 652.452 C 445.113 651.929 444.685 651.501 444.162 651.501 Z" style="fill: rgb(26, 26, 26);"><title>PREV CLIP</title></path>
+                            <path id="svg-btn-48" d="M 463.904 651.501 L 449.393 651.501 C 448.87 651.501 448.443 651.929 448.443 652.452 L 448.443 661.652 C 448.443 662.175 448.87 662.604 449.393 662.604 L 463.904 662.604 C 464.427 662.604 464.854 662.175 464.854 661.652 L 464.854 652.452 C 464.854 651.929 464.427 651.501 463.904 651.501 Z" style="fill: rgb(26, 26, 26);"><title>NEXT CLIP</title></path>
+                            <path id="svg-btn-49" d="M 444.108 672.347 L 429.598 672.347 C 429.075 672.347 428.647 672.775 428.647 673.298 L 428.647 682.498 C 428.647 683.021 429.075 683.45 429.598 683.45 L 444.108 683.45 C 444.631 683.45 445.059 683.021 445.059 682.498 L 445.059 673.298 C 445.059 672.775 444.631 672.347 444.108 672.347 Z" style="fill: rgb(26, 26, 26);" class=""><title>RWD</title></path>
+                            <path id="svg-btn-50" d="M 463.85 672.347 L 449.34 672.347 C 448.817 672.347 448.389 672.775 448.389 673.298 L 448.389 682.498 C 448.389 683.021 448.817 683.45 449.34 683.45 L 463.85 683.45 C 464.373 683.45 464.801 683.021 464.801 682.498 L 464.801 673.298 C 464.801 672.775 464.373 672.347 463.85 672.347 Z" style="fill: rgb(26, 26, 26);" class=""><title>FWD</title></path>
+                            <path id="svg-btn-51" d="M 463.85 687.139 L 429.598 687.139 C 429.075 687.139 428.647 687.567 428.647 688.09 L 428.647 697.29 C 428.647 697.813 429.075 698.242 429.598 698.242 L 463.85 698.242 C 464.373 698.242 464.801 697.813 464.801 697.29 L 464.801 688.09 C 464.801 687.567 464.373 687.139 463.85 687.139 Z" style="fill: rgb(26, 26, 26);" class=""><title>STOP</title></path>
+                        </g>
+                        <g>
+                            <title>ROTARY KNOBS</title>
+                            <path id="svg-rot-0" d="M 103.345 171.478 C 103.345 168.557 105.713 166.19 108.634 166.19 C 111.554 166.19 113.922 168.557 113.922 171.478 C 113.922 174.399 111.554 176.766 108.634 176.766 C 105.713 176.766 103.345 174.399 103.345 171.478 Z" style="fill: rgb(27, 27, 27);"><title>Y LIFT</title></path>
+                            <path id="svg-rot-1" d="M 130.629 171.478 C 130.629 168.557 132.996 166.19 135.917 166.19 C 138.838 166.19 141.205 168.557 141.205 171.478 C 141.205 174.399 138.838 176.766 135.917 176.766 C 132.996 176.766 130.629 174.399 130.629 171.478 Z" style="fill: rgb(27, 27, 27);"><title>Y GAMMA</title></path>
+                            <path id="svg-rot-2" d="M 157.911 171.478 C 157.911 168.557 160.279 166.19 163.199 166.19 C 166.12 166.19 168.488 168.557 168.488 171.478 C 168.488 174.399 166.12 176.766 163.199 176.766 C 160.279 176.766 157.911 174.399 157.911 171.478 Z" style="fill: rgb(27, 27, 27);"><title>Y GAIN</title></path>
+                            <path id="svg-rot-3" d="M 185.207 171.478 C 185.207 168.557 187.574 166.19 190.495 166.19 C 193.416 166.19 195.783 168.557 195.783 171.478 C 195.783 174.399 193.416 176.766 190.495 176.766 C 187.574 176.766 185.207 174.399 185.207 171.478 Z" style="fill: rgb(27, 27, 27);"><title>CONTRAST</title></path>
+                            <path id="svg-rot-4" d="M 221.179 171.478 C 221.179 168.557 223.546 166.19 226.467 166.19 C 229.388 166.19 231.755 168.557 231.755 171.478 C 231.755 174.399 229.388 176.766 226.467 176.766 C 223.546 176.766 221.179 174.399 221.179 171.478 Z" style="fill: rgb(27, 27, 27);"><title>PIVOT</title></path>
+                            <path id="svg-rot-5" d="M 248.462 171.478 C 248.462 168.557 250.829 166.19 253.75 166.19 C 256.671 166.19 259.038 168.557 259.038 171.478 C 259.038 174.399 256.671 176.766 253.75 176.766 C 250.829 176.766 248.462 174.399 248.462 171.478 Z" style="fill: rgb(27, 27, 27);"><title>MID DETAIL</title></path>
+                            <path id="svg-rot-6" d="M 275.745 171.478 C 275.745 168.557 278.112 166.19 281.033 166.19 C 283.954 166.19 286.321 168.557 286.321 171.478 C 286.321 174.399 283.954 176.766 281.033 176.766 C 278.112 176.766 275.745 174.399 275.745 171.478 Z" style="fill: rgb(27, 27, 27);"><title>COLOR BOOST</title></path>
+                            <path id="svg-rot-7" d="M 303.028 171.478 C 303.028 168.557 305.395 166.19 308.316 166.19 C 311.237 166.19 313.604 168.557 313.604 171.478 C 313.604 174.399 311.237 176.766 308.316 176.766 C 305.395 176.766 303.028 174.399 303.028 171.478 Z" style="fill: rgb(27, 27, 27);"><title>SHADOWS</title></path>
+                            <path id="svg-rot-8" d="M 339 171.478 C 339 168.557 341.367 166.19 344.288 166.19 C 347.209 166.19 349.576 168.557 349.576 171.478 C 349.576 174.399 347.209 176.766 344.288 176.766 C 341.367 176.766 339 174.399 339 171.478 Z" style="fill: rgb(27, 27, 27);"><title>HIGHLIGHTS</title></path>
+                            <path id="svg-rot-9" d="M 366.283 171.478 C 366.283 168.557 368.65 166.19 371.571 166.19 C 374.492 166.19 376.859 168.557 376.859 171.478 C 376.859 174.399 374.492 176.766 371.571 176.766 C 368.65 176.766 366.283 174.399 366.283 171.478 Z" style="fill: rgb(27, 27, 27);"><title>SATURATION</title></path>
+                            <path id="svg-rot-10" d="M 393.566 171.478 C 393.566 168.557 395.933 166.19 398.854 166.19 C 401.775 166.19 404.142 168.557 404.142 171.478 C 404.142 174.399 401.775 176.766 398.854 176.766 C 395.933 176.766 393.566 174.399 393.566 171.478 Z" style="fill: rgb(27, 27, 27);"><title>HUE</title></path>
+                            <path id="svg-rot-11" d="M 420.849 171.478 C 420.849 168.557 423.216 166.19 426.137 166.19 C 429.058 166.19 431.425 168.557 431.425 171.478 C 431.425 174.399 429.058 176.766 426.137 176.766 C 423.216 176.766 420.849 174.399 420.849 171.478 Z" style="fill: rgb(27, 27, 27);"><title>LUM MIX</title></path>
+                        </g>
+                        <g clip-path="url(#clip_112)" transform="matrix(1, 0, 0, 1, -30.094175, -402.56369)">
+                            <title>WHEELS</title>
+                            <path id="svg-wheel-left" d="M 212.473 625.464 C 232.118 625.464 248.044 641.389 248.044 661.034 C 248.044 680.68 232.118 696.607 212.473 696.607 C 192.828 696.607 176.902 680.68 176.902 661.034 C 176.902 641.389 192.828 625.464 212.473 625.464 Z" style="fill: rgb(27, 27, 27);" class=""><title>L WHEEL</title></path>
+                            <path id="svg-ball-left" d="M 213.036 644.432 C 222.367 644.432 229.931 651.996 229.931 661.327 C 229.931 670.658 222.367 678.223 213.036 678.223 C 203.705 678.223 196.141 670.658 196.141 661.327 C 196.141 651.996 203.705 644.432 213.036 644.432 Z" style="fill: rgb(20, 20, 20);"><title>L BALL</title></path>
+                            <path id="svg-wheel-center" d="M 297.932 625.464 C 317.577 625.464 333.503 641.389 333.503 661.034 C 333.503 680.68 317.577 696.607 297.932 696.607 C 278.287 696.607 262.361 680.68 262.361 661.034 C 262.361 641.389 278.287 625.464 297.932 625.464 Z" style="fill: rgb(27, 27, 27);" class=""><title>C WHEEL</title></path>
+                            <path id="svg-ball-center" d="M 297.639 644.432 C 306.97 644.432 314.534 651.996 314.534 661.327 C 314.534 670.658 306.97 678.223 297.639 678.223 C 288.308 678.223 280.744 670.658 280.744 661.327 C 280.744 651.996 288.308 644.432 297.639 644.432 Z" style="fill: rgb(20, 20, 20);" class=""><title>C BALL</title></path>
+                            <path id="svg-wheel-right" d="M 382.241 625.756 C 401.886 625.756 417.812 641.681 417.812 661.326 C 417.812 680.972 401.886 696.899 382.241 696.899 C 362.596 696.899 346.67 680.972 346.67 661.326 C 346.67 641.681 362.596 625.756 382.241 625.756 Z" style="fill: rgb(27, 27, 27);" class=""><title>R WHEEL</title></path>
+                            <path id="svg-ball-right" d="M 382.241 644.432 C 391.572 644.432 399.136 651.996 399.136 661.327 C 399.136 670.658 391.572 678.223 382.241 678.223 C 372.91 678.223 365.346 670.658 365.346 661.327 C 365.346 651.996 372.91 644.432 382.241 644.432 Z" style="fill: rgb(20, 20, 20);" class=""><title>R BALL</title></path>
+                        </g>
+                    </svg>
+                    <div id="controls"></div>
+                <div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 8px; left: 102.013px; top: 343.684px; transform: translate(-50%, -50%);">AUTO<br>COLOR</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 8px; left: 178.636px; top: 343.684px; transform: translate(-50%, -50%);">OFFSET</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 8px; left: 102.013px; top: 401.101px; transform: translate(-50%, -50%);">COPY</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 8px; left: 178.636px; top: 401.101px; transform: translate(-50%, -50%);">PASTE</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 8px; left: 102.013px; top: 458.52px; transform: translate(-50%, -50%);">UNDO</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 8px; left: 178.636px; top: 458.52px; transform: translate(-50%, -50%);">REDO</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 8px; left: 102.013px; top: 515.936px; transform: translate(-50%, -50%);">DELETE</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 8px; left: 178.636px; top: 515.936px; transform: translate(-50%, -50%);">RESET</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 8px; left: 102.013px; top: 573.353px; transform: translate(-50%, -50%);">BYPASS</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 8px; left: 178.636px; top: 573.353px; transform: translate(-50%, -50%);">DISABLE</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 8px; left: 102.013px; top: 654.269px; transform: translate(-50%, -50%);">USER</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 8px; left: 178.636px; top: 654.269px; transform: translate(-50%, -50%);">LOOP</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 18px; left: 101.799px; top: 711.686px; transform: translate(-50%, -50%);">◤</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 18px; left: 178.426px; top: 711.686px; transform: translate(-50%, -50%);">◢</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 8px; left: 315.482px; top: 343.684px; transform: translate(-50%, -50%);">PLAY<br>STILL</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 8px; left: 392.085px; top: 343.684px; transform: translate(-50%, -50%);">WIPE<br>STILL</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 8px; left: 468.7px; top: 343.684px; transform: translate(-50%, -50%);">GRAB<br>STILL</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 8px; left: 604.295px; top: 343.684px; transform: translate(-50%, -50%);">H/LITE</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 8px; left: 681.339px; top: 343.684px; transform: translate(-50%, -50%);">VIEWER</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 8px; left: 758.384px; top: 343.684px; transform: translate(-50%, -50%);">CURSOR</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 8px; left: 835.43px; top: 343.684px; transform: translate(-50%, -50%);">SELECT</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 8px; left: 643.402px; top: 400.944px; transform: translate(-50%, -50%);">RESET<br>LIFT</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 8px; left: 720.015px; top: 400.944px; transform: translate(-50%, -50%);">RESET<br>GAMMA</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 8px; left: 796.622px; top: 400.944px; transform: translate(-50%, -50%);">RESET<br>GAIN</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 8px; left: 971.015px; top: 343.684px; transform: translate(-50%, -50%);">ADD<br>NODE</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 8px; left: 1047.62px; top: 343.684px; transform: translate(-50%, -50%);">ADD<br>WINDOW</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 8px; left: 1124.23px; top: 343.684px; transform: translate(-50%, -50%);">ADD<br>KEYFRM</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 8px; left: 1261.06px; top: 343.684px; transform: translate(-50%, -50%);">PREV<br>STILL</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 8px; left: 1337.69px; top: 343.684px; transform: translate(-50%, -50%);">NEXT<br>STILL</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 8px; left: 1261.06px; top: 401.101px; transform: translate(-50%, -50%);">PREV<br>KEYFRM</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 8px; left: 1337.69px; top: 401.101px; transform: translate(-50%, -50%);">NEXT<br>KEYFRM</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 8px; left: 1261.06px; top: 458.52px; transform: translate(-50%, -50%);">PREV<br>NODE</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 8px; left: 1337.69px; top: 458.52px; transform: translate(-50%, -50%);">NEXT<br>NODE</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 8px; left: 1261.06px; top: 515.936px; transform: translate(-50%, -50%);">PREV<br>FRAME</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 8px; left: 1337.69px; top: 515.936px; transform: translate(-50%, -50%);">NEXT<br>FRAME</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 8px; left: 1261.06px; top: 573.353px; transform: translate(-50%, -50%);">PREV<br>CLIP</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 8px; left: 1337.69px; top: 573.353px; transform: translate(-50%, -50%);">NEXT<br>CLIP</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 18px; left: 1260.85px; top: 654.269px; transform: translate(-50%, -50%);">◀︎</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 18px; left: 1337.48px; top: 654.269px; transform: translate(-50%, -50%);">▶︎</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 18px; left: 1299.17px; top: 711.686px; transform: translate(-50%, -50%);">■</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 9px; left: 103.65px; top: 279.664px; transform: translate(-50%, 0px);">Y LIFT</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 9px; left: 209.553px; top: 279.664px; transform: translate(-50%, 0px);">Y GAMMA</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 9px; left: 315.453px; top: 279.664px; transform: translate(-50%, 0px);">Y GAIN</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 9px; left: 421.404px; top: 279.664px; transform: translate(-50%, 0px);">CONTRAST</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 9px; left: 561.033px; top: 279.664px; transform: translate(-50%, 0px);">PIVOT</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 9px; left: 666.935px; top: 279.664px; transform: translate(-50%, 0px);">MID DETAIL</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 9px; left: 772.836px; top: 279.664px; transform: translate(-50%, 0px);">COLOR BOOST</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 9px; left: 878.738px; top: 279.664px; transform: translate(-50%, 0px);">SHADOWS</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 9px; left: 1018.37px; top: 279.664px; transform: translate(-50%, 0px);">HIGHLIGHTS</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 9px; left: 1124.27px; top: 279.664px; transform: translate(-50%, 0px);">SATURATION</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 9px; left: 1230.17px; top: 279.664px; transform: translate(-50%, 0px);">HUE</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 9px; left: 1336.07px; top: 279.664px; transform: translate(-50%, 0px);">LUM MIX</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 10px; left: 392.085px; top: 675.529px; transform: translate(-50%, 0px);">L</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 14px; left: 392.085px; top: 589.947px; transform: translate(-50%, -50%);">L</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 10px; left: 720.481px; top: 675.529px; transform: translate(-50%, 0px);">C</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 14px; left: 720.481px; top: 589.947px; transform: translate(-50%, -50%);">C</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 10px; left: 1048.87px; top: 675.529px; transform: translate(-50%, 0px);">R</div><div class="svg-label" style="position: absolute; color: rgb(255, 255, 255); font-weight: bold; font-family: -apple-system, BlinkMacSystemFont, sans-serif; pointer-events: none; white-space: nowrap; text-align: center; z-index: 5; font-size: 14px; left: 1048.87px; top: 589.947px; transform: translate(-50%, -50%);">R</div></div>
+            </div>
+            
+            <div class="controls-area" id="controlsArea">
+                <div id="controls2"></div>
+            </div>
+        </div>
+        
+        <div class="side-panel">
+            <div class="panel-section">
+                <h3>MIDI Presets</h3>
+                <div style="margin-bottom: 15px;">
+                    <button onclick="savePreset()" class="primary">Save Current</button>
+                    <button onclick="exportPreset()">Export</button>
+                </div>
+                <div class="preset-list" id="presetList">
+                    Loading...
+                </div>
+            </div>
+            <div class="panel-section">
+                <h3>MIDI Messages</h3>
+                <div style="margin-bottom: 10px;">
+                    <button id="midiToggle" onclick="toggleMidi()" class="primary">MIDI ON</button>
+                </div>
+                <select id="midiDevice" style="width: calc(100% - 50px); padding: 6px; background: #333; border: 1px solid #555; color: #fff; border-radius: 4px; margin-bottom: 8px;">
+                    <option>Loading...</option>
+                </select>
+                <button onclick="refreshMidi()" style="padding: 4px 8px; width: 42px;">↻</button>
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                    <span style="font-size: 12px; color: #888;">Octave:</span>
+                    <button id="octaveDown" style="padding: 4px 10px;">▼</button>
+                    <span id="octaveDisplay" style="font-size: 12px; min-width: 50px; text-align: center;">0</span>
+                    <button id="octaveUp" style="padding: 4px 10px;">▲</button>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <span style="font-size:11px;color:#888;">MIDI Messages</span>
+                    <button onclick="document.getElementById('midiLog').innerHTML=''" style="padding:2px 8px;font-size:10px;">Clear</button>
+                </div>
+                <div class="event-log" id="midiLog" style="height: 150px; overflow-y: auto; font-size: 10px;"></div>
+            </div>
+            <div class="panel-section">
+                <h3>Event Log</h3>
+                <div style="display:flex;justify-content:flex-end;margin-bottom:4px;">
+                    <button onclick="document.getElementById('eventLog').innerHTML=''" style="padding:2px 8px;font-size:10px;">Clear</button>
+                </div>
+                <div class="event-log" id="eventLog" style="height: 150px; overflow-y: auto; font-size: 10px;"></div>
+            </div>
+            <div class="panel-section">
+                <h3>Settings</h3>
+                <div style="margin-bottom: 12px;">
+                    <label style="font-size:11px;color:#888;display:block;margin-bottom:4px;">Rotary Step: <span id="rotaryStepVal">1</span></label>
+                    <input type="range" id="rotaryStep" min="1" max="10" value="1" style="width:100%;" oninput="updateSetting('rotaryStep', this.value)">
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <label style="font-size:11px;color:#888;display:block;margin-bottom:4px;">Rotary Throttle (ms): <span id="rotaryThrottleVal">5</span></label>
+                    <input type="range" id="rotaryThrottle" min="1" max="50" value="5" style="width:100%;" oninput="updateSetting('rotaryThrottle', this.value)">
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <label style="font-size:11px;color:#888;display:block;margin-bottom:4px;">Ball X/Y Step: <span id="ballStepVal">1</span></label>
+                    <input type="range" id="ballStep" min="1" max="20" value="1" style="width:100%;" oninput="updateSetting('ballStep', this.value)">
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <label style="font-size:11px;color:#888;display:block;margin-bottom:4px;">Ball Throttle (ms): <span id="ballThrottleVal">0</span></label>
+                    <input type="range" id="ballThrottle" min="0" max="50" value="0" style="width:100%;" oninput="updateSetting('ballThrottle', this.value)">
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <label style="font-size:11px;color:#888;display:block;margin-bottom:4px;">Wheel Step: <span id="wheelStepVal">1</span></label>
+                    <input type="range" id="wheelStep" min="1" max="20" value="1" style="width:100%;" oninput="updateSetting('wheelStep', this.value)">
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <label style="font-size:11px;color:#888;display:block;margin-bottom:4px;">Wheel Throttle (ms): <span id="wheelThrottleVal">0</span></label>
+                    <input type="range" id="wheelThrottle" min="0" max="50" value="0" style="width:100%;" oninput="updateSetting('wheelThrottle', this.value)">
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    
+    <script>
+        const buttonNames = {
+            12: 'AUTO COLOR', 13: 'OFFSET', 14: 'COPY', 15: 'PASTE',
+            16: 'UNDO', 17: 'REDO', 18: 'DELETE', 19: 'RESET',
+            20: 'BYPASS', 21: 'DISABLE', 22: 'USER', 23: 'LOOP',
+            24: '◤', 25: '◢', 26: 'PLAY STILL', 27: 'WIPE STILL',
+            28: 'GRAB STILL', 29: 'H/LITE', 30: 'VIEWER', 31: 'CURSOR',
+            32: 'SELECT', 33: 'RESET LIFT', 34: 'RESET GAMMA', 35: 'RESET GAIN',
+            36: 'ADD NODE', 37: 'ADD WINDOW', 38: 'ADD KEYFRM', 39: 'PREV STILL',
+            40: 'NEXT STILL', 41: 'PREV KEYFRM', 42: 'NEXT KEYFRM', 43: 'PREV NODE',
+            44: 'NEXT NODE', 45: 'PREV FRAME', 46: 'NEXT FRAME', 47: 'PREV CLIP',
+            48: 'NEXT CLIP', 49: '◀︎', 50: '▶︎', 51: '■'
+        };
+        
+        const rotaryNames = {
+            0: 'Y LIFT', 1: 'Y GAMMA', 2: 'Y GAIN', 3: 'CONTRAST',
+            4: 'PIVOT', 5: 'MID DETAIL', 6: 'COLOR BOOST', 7: 'SHADOWS',
+            8: 'HIGHLIGHTS', 9: 'SATURATION', 10: 'HUE', 11: 'LUM MIX'
+        };
+        
+        const trackballNames = {
+            'left': 'L', 'center': 'C', 'right': 'R'
+        };
+        
+        const controlTypes = {
+            trackball: { width: 276, height: 276 },
+            rotary: { width: 60, height: 60 },
+            button: { width: 60, height: 36 }
+        };
+        
+        function getControlName(type, id) {
+            if (type === 'button') return buttonNames[id] || id;
+            if (type === 'rotary') return rotaryNames[id] || id;
+            if (type === 'trackball') return trackballNames[id] || id;
+            return id;
+        }
+        
+        let controls = [];
+        let selectedId = null;
+        let dragging = false;
+        let dragOffset = { x: 0, y: 0 };
+        let uidCounter = 0;
+        let wsConnected = false;
+        
+        // Create WebSocket connection
+        const ws = new WebSocket('ws://localhost:8765');
+        
+        ws.onopen = () => {
+            wsConnected = true;
+            document.getElementById('status').textContent = 'Connected';
+            document.getElementById('status').className = 'status connected';
+            log('WebSocket connected to server');
+            loadPresets();
+        };
+        
+        ws.onclose = () => {
+            wsConnected = false;
+            document.getElementById('status').textContent = 'Disconnected';
+            document.getElementById('status').className = 'status disconnected';
+            log('WebSocket disconnected');
+            // Retry after 3 seconds
+            setTimeout(() => {
+                log('Reconnecting...');
+                ws.open();
+            }, 3000);
+        };
+        
+        ws.onerror = (err) => {
+            log('WS Error - check server is running');
+        };
+        
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            
+            if (data.type === 'connected') {
+                log('Panel connected!');
+                return;
+            }
+            
+            if (data.type === 'button') {
+                if (data.id >= 0 && data.id <= 11) {
+                    highlightControl('rotary', data.id, data.pressed);
+                    log('Switch ' + (data.id + 1) + ': ' + (data.pressed ? 'PRESS' : 'RELEASE'));
+                } else {
+                    highlightControl('button', data.id, data.pressed);
+                    log('Button ' + (data.id - 11) + ': ' + (data.pressed ? 'PRESS' : 'RELEASE'));
+                }
+            }
+            else if (data.type === 'trackball') {
+                highlightControl('trackball', data.id, true);
+                setTimeout(() => highlightControl('trackball', data.id, false), 100);
+                
+                // Log trackball
+                log(data.id.toUpperCase() + ' Ball: X=' + data.x + ' Y=' + data.y);
+            }
+            else if (data.type === 'jog') {
+                highlightControl('jog', data.id, true);
+                setTimeout(() => highlightControl('jog', data.id, false), 150);
+                log(data.id.toUpperCase() + ' Wheel: ' + data.value);
+            }
+            else if (data.type === 'encoder' || data.type === 'rotary') {
+                highlightControl('rotary', data.id, true);
+                setTimeout(() => highlightControl('rotary', data.id, false), 150);
+                log('Rotary ' + (data.id + 1) + ': ' + data.value);
+            }
+            else if (data.type === 'midi') {
+                const typeStr = data.midiType === 'note' ? 'NOTE' : 'CC';
+                const ch = data.channel + 1;
+                const msg = `${typeStr} Ch${ch} Note:${data.note} Vel:${data.velocity}`;
+                const midiLog = document.getElementById('midiLog');
+                if (midiLog) {
+                    midiLog.innerHTML = msg + '<br>' + midiLog.innerHTML;
+                }
+            }
+            else if (data.type === 'midiPorts') {
+                const select = document.getElementById('midiDevice');
+                select.innerHTML = '';
+                data.ports.forEach((port, i) => {
+                    const opt = document.createElement('option');
+                    opt.value = i;
+                    opt.textContent = port;
+                    select.appendChild(opt);
+                });
+                select.addEventListener('change', (e) => {
+                    ws.send(JSON.stringify({ type: 'setMidiDevice', index: e.target.value }));
+                });
+            }
+            else if (data.type === 'midiDeviceChanged') {
+                log('MIDI device: ' + data.name);
+            }
+            else if (data.type === 'octave') {
+                document.getElementById('octaveDisplay').textContent = data.value;
+            }
+        };
+        
+        // Octave buttons
+        document.getElementById('octaveUp').addEventListener('click', () => {
+            const current = parseInt(document.getElementById('octaveDisplay').textContent) || 0;
+            if (current < 3) ws.send(JSON.stringify({ type: 'setOctave', value: current + 1 }));
+        });
+        document.getElementById('octaveDown').addEventListener('click', () => {
+            const current = parseInt(document.getElementById('octaveDisplay').textContent) || 0;
+            if (current > -3) ws.send(JSON.stringify({ type: 'setOctave', value: current - 1 }));
+        });
+        
+        // SVG title to ID mapping (matching panel controls.txt)
+        const buttonNameToId = {
+            'AUTO COLOR': 12, 'OFFSET': 13, 'COPY': 14, 'PASTE': 15,
+            'UNDO': 16, 'REDO': 17, 'DELETE': 18, 'RESET': 19,
+            'BYPASS': 20, 'DISABLE': 21, 'USER': 22, 'LOOP': 23,
+            'SHIFT DOWN': 24, 'SHIFT UP': 25, 'PLAY STILL': 26, 'WIPE STILL': 27,
+            'GRAB STILL': 28, 'H/LITE': 29, 'VIEWER': 30, 'CURSOR': 31,
+            'SELECT': 32, 'RESET LIFT': 33, 'RESET GAMMA': 34, 'RESET GAIN': 35,
+            'ADD NODE': 36, 'ADD WINDOW': 37, 'ADD KEYFRM': 38, 'PREV STILL': 39,
+            'NEXT STILL': 40, 'PREV KEYFRM': 41, 'NEXT KEYFRM': 42, 'PREV NODE': 43,
+            'NEXT NODE': 44, 'PREV FRAME': 45, 'NEXT FRAME': 46, 'PREV CLIP': 47,
+            'NEXT CLIP': 48, 'RWD': 49, 'FWD': 50, 'STOP': 51
+        };
+        
+        const rotaryNameToId = {
+            'Y LIFT': 0, 'Y GAMMA': 1, 'Y GAIN': 2, 'CONTRAST': 3,
+            'PIVOT': 4, 'MID DETAIL': 5, 'COLOR BOOST': 6, 'SHADOWS': 7,
+            'HIGHLIGHTS': 8, 'SATURATION': 9, 'HUE': 10, 'LUM MIX': 11
+        };
+        
+        const trackballNameToId = { 'L': 'left', 'C': 'center', 'R': 'right' };
+        
+        function findSvgByTitle(title) {
+            // Find all path elements with matching title
+            const svg = document.getElementById('panelSvg');
+            if (!svg) return null;
+            
+            const allPaths = svg.querySelectorAll('path');
+            for (const path of allPaths) {
+                const titleEl = path.querySelector('title');
+                if (titleEl && titleEl.textContent === title) {
+                    return path;
+                }
+            }
+            return null;
+        }
+        
+        function highlightSvgElement(type, id, active) {
+            let svgId = null;
+            
+            if (type === 'button' && id >= 12 && id <= 51) {
+                svgId = 'svg-btn-' + id;
+            } else if (type === 'rotary' && id >= 0 && id <= 11) {
+                svgId = 'svg-rot-' + id;
+            } else if (type === 'trackball') {
+                if (id === 'left') svgId = 'svg-ball-left';
+                else if (id === 'center') svgId = 'svg-ball-center';
+                else if (id === 'right') svgId = 'svg-ball-right';
+            } else if (type === 'jog') {
+                if (id === 'left') svgId = 'svg-wheel-left';
+                else if (id === 'center') svgId = 'svg-wheel-center';
+                else if (id === 'right') svgId = 'svg-wheel-right';
+            }
+            
+            if (svgId) {
+                const el = document.getElementById(svgId);
+                if (el) {
+                    if (active) {
+                        el.classList.add('active-svg');
+                    } else {
+                        el.classList.remove('active-svg');
+                    }
+                }
+            }
+        }
+        
+        function highlightControl(type, id, active) {
+            highlightSvgElement(type, id, active);
+        }
+        
+        function log(msg) {
+            const logEl = document.getElementById('eventLog');
+            if (logEl) {
+                logEl.innerHTML = msg + '<br>' + logEl.innerHTML;
+            }
+        }
+
+        function addControl(type, id, x, y, area) {
+            const config = controlTypes[type];
+            const ctrl = {
+                _uid: uidCounter++,
+                type: type,
+                id: id,
+                x: x,
+                y: y,
+                width: config.width,
+                height: config.height,
+                area: area
+            };
+            controls.push(ctrl);
+            renderControls();
+            selectControl(ctrl._uid);
+            addSvgLabels();
+        }
+        
+        function addSvgLabels() {
+            const wrapper = document.getElementById('panelWrapper');
+            const svg = document.getElementById('panelSvg');
+            if (!wrapper || !svg) return;
+            
+            wrapper.querySelectorAll('.svg-label').forEach(el => el.remove());
+            
+            const paths = svg.querySelectorAll('path[id^="svg-btn-"], path[id^="svg-rot-"], path[id^="svg-ball-"], path[id^="svg-wheel-"]');
+            
+            const wrapperRect = wrapper.getBoundingClientRect();
+            
+            paths.forEach(path => {
+                const id = path.id;
+                const rect = path.getBoundingClientRect();
+                
+                let left = rect.left - wrapperRect.left + rect.width / 2;
+                let top = rect.top - wrapperRect.top + rect.height / 2;
+                
+                const label = document.createElement('div');
+                label.className = 'svg-label';
+                label.style.position = 'absolute';
+                label.style.color = '#fff';
+                label.style.fontWeight = 'bold';
+                label.style.fontFamily = '-apple-system, BlinkMacSystemFont, sans-serif';
+                label.style.pointerEvents = 'none';
+                label.style.whiteSpace = 'nowrap';
+                label.style.textAlign = 'center';
+                label.style.zIndex = '5';
+                
+                let text = '';
+                if (id.startsWith('svg-btn-')) {
+                    const btnId = parseInt(id.replace('svg-btn-', ''));
+                    text = buttonNames[btnId] || '';
+                    label.style.fontSize = '8px';
+                    label.style.left = left + 'px';
+                    label.style.top = top + 'px';
+                    label.style.transform = 'translate(-50%, -50%)';
+                } else if (id.startsWith('svg-rot-')) {
+                    const rotId = parseInt(id.replace('svg-rot-', ''));
+                    text = rotaryNames[rotId] || '';
+                    label.style.fontSize = '6px';
+                    label.style.left = left + 'px';
+                    label.style.top = (rect.bottom - wrapperRect.top + 6) + 'px';
+                    label.style.transform = 'translate(-50%, 0)';
+                } else if (id.startsWith('svg-ball-')) {
+                    const ballId = id.replace('svg-ball-', '');
+                    text = trackballNames[ballId] || ballId.toUpperCase();
+                    label.style.fontSize = '14px';
+                    label.style.left = left + 'px';
+                    label.style.top = (rect.bottom - wrapperRect.top + 10) + 'px';
+                    label.style.transform = 'translate(-50%, 0)';
+                } else if (id.startsWith('svg-wheel-')) {
+                    const wheelId = id.replace('svg-wheel-', '');
+                    text = wheelId === 'left' ? 'L' : wheelId === 'center' ? 'C' : wheelId === 'right' ? 'R' : wheelId.toUpperCase();
+                    label.style.fontSize = '14px';
+                    label.style.left = left + 'px';
+                    label.style.top = (rect.bottom - wrapperRect.top + 10) + 'px';
+                    label.style.transform = 'translate(-50%, 0)';
+                }
+                
+                if (text) {
+                    if (id.startsWith('svg-rot-')) {
+                        label.textContent = text;
+                    } else {
+                        const words = text.split(' ');
+                        if (words.length > 1) {
+                            label.innerHTML = words[0] + '<br>' + words.slice(1).join(' ');
+                        } else {
+                            label.textContent = text;
+                        }
+                    }
+                    wrapper.appendChild(label);
+                }
+            });
+        }
+        
+        function renderControls() {
+            // HTML controls are hidden - just use SVG for display
+            document.getElementById('controls').innerHTML = '';
+            document.getElementById('controls2').innerHTML = '';
+        }
+        
+        function selectControl(uid) {
+            selectedId = uid;
+            const ctrl = controls.find(c => c._uid === uid);
+        }
+        
+        function startDrag(e, uid) {
+            if (e.button !== 0) return;
+            const ctrl = controls.find(c => c._uid === uid);
+            if (!ctrl) return;
+            
+            dragging = true;
+            dragOffset = { x: e.clientX - ctrl.x, y: e.clientY - ctrl.y };
+            
+            document.addEventListener('mousemove', doDrag);
+            document.addEventListener('mouseup', endDrag);
+        }
+        
+        function doDrag(e) {
+            if (!dragging || selectedId === null) return;
+            
+            const ctrl = controls.find(c => c._uid === selectedId);
+            if (!ctrl) return;
+            
+            let newX = e.clientX - dragOffset.x;
+            let newY = e.clientY - dragOffset.y;
+            
+            ctrl.x = Math.round(newX);
+            ctrl.y = Math.round(newY);
+        }
+
+        function endDrag() {
+            dragging = false;
+            document.removeEventListener('mousemove', doDrag);
+            document.removeEventListener('mouseup', endDrag);
+        }
+
+        function addSvgLabels() {
+            const wrapper = document.getElementById('panelWrapper');
+            const svg = document.getElementById('panelSvg');
+            if (!wrapper || !svg) return;
+            
+            wrapper.querySelectorAll('.svg-label').forEach(el => el.remove());
+            
+            const paths = svg.querySelectorAll('path[id^="svg-btn-"], path[id^="svg-rot-"], path[id^="svg-ball-"], path[id^="svg-wheel-"]');
+            
+            const wrapperRect = wrapper.getBoundingClientRect();
+            
+            paths.forEach(path => {
+                const id = path.id;
+                const rect = path.getBoundingClientRect();
+                
+                let left = rect.left - wrapperRect.left + rect.width / 2;
+                let top = rect.top - wrapperRect.top + rect.height / 2;
+                
+                const label = document.createElement('div');
+                label.className = 'svg-label';
+                label.style.position = 'absolute';
+                label.style.color = '#fff';
+                label.style.fontWeight = 'bold';
+                label.style.fontFamily = '-apple-system, BlinkMacSystemFont, sans-serif';
+                label.style.pointerEvents = 'none';
+                label.style.whiteSpace = 'nowrap';
+                label.style.textAlign = 'center';
+                label.style.zIndex = '5';
+                
+                let text = '';
+                if (id.startsWith('svg-btn-')) {
+                    const btnId = parseInt(id.replace('svg-btn-', ''));
+                    text = buttonNames[btnId] || '';
+                    
+                    // Special sizing for SHIFT, FWD, RWD, STOP
+                    if (btnId === 24 || btnId === 25 || btnId === 49 || btnId === 50 || btnId === 51) {
+                        label.style.fontSize = '18px';
+                    } else {
+                        label.style.fontSize = '8px';
+                    }
+                    
+                    // Special positioning for Shift buttons - each in its own SVG
+                    if (btnId === 24) { // SHIFT DOWN
+                        label.style.left = left + 'px';
+                        label.style.top = top + 'px';
+                        label.style.transform = 'translate(-50%, -50%)';
+                    } else if (btnId === 25) { // SHIFT UP
+                        label.style.left = left + 'px';
+                        label.style.top = top + 'px';
+                        label.style.transform = 'translate(-50%, -50%)';
+                    } else {
+                        label.style.left = left + 'px';
+                        label.style.top = top + 'px';
+                        label.style.transform = 'translate(-50%, -50%)';
+                    }
+                } else if (id.startsWith('svg-rot-')) {
+                    const rotId = parseInt(id.replace('svg-rot-', ''));
+                    text = rotaryNames[rotId] || '';
+                    label.style.fontSize = '9px';
+                    label.style.left = left + 'px';
+                    label.style.top = (rect.bottom - wrapperRect.top + 8) + 'px';
+                    label.style.transform = 'translate(-50%, 0)';
+                } else if (id.startsWith('svg-ball-')) {
+                    const ballId = id.replace('svg-ball-', '');
+                    text = trackballNames[ballId] || ballId.toUpperCase();
+                    label.style.fontSize = '14px';
+                    label.style.left = left + 'px';
+                    label.style.top = top + 'px';
+                    label.style.transform = 'translate(-50%, -50%)';
+                } else if (id.startsWith('svg-wheel-')) {
+                    const wheelId = id.replace('svg-wheel-', '');
+                    const ballPath = svg.querySelector('#svg-ball-' + wheelId);
+                    if (ballPath) {
+                        const ballRect = ballPath.getBoundingClientRect();
+                        text = wheelId === 'left' ? 'L' : wheelId === 'center' ? 'C' : wheelId === 'right' ? 'R' : wheelId.toUpperCase();
+                        label.style.fontSize = '10px';
+                        label.style.left = (ballRect.left - wrapperRect.left + ballRect.width/2) + 'px';
+                        label.style.top = (ballRect.bottom - wrapperRect.top + 20) + 'px';
+                        label.style.transform = 'translate(-50%, 0)';
+                    }
+                }
+                
+                if (text) {
+                    if (id.startsWith('svg-rot-')) {
+                        label.textContent = text;
+                    } else {
+                        const words = text.split(' ');
+                        if (words.length > 1) {
+                            label.innerHTML = words[0] + '<br>' + words.slice(1).join(' ');
+                        } else {
+                            label.textContent = text;
+                        }
+                    }
+                    wrapper.appendChild(label);
+                }
+            });
+        }
+
+        // Run addSvgLabels after a short delay to ensure DOM is ready
+        setTimeout(() => {
+            try {
+                addSvgLabels();
+            } catch(e) {
+                console.error('addSvgLabels error:', e);
+            }
+        }, 100);
+        
+        function loadPresets() {
+            ws.send(JSON.stringify({ type: 'getPresets' }));
+        }
+        
+        function savePreset() {
+            const name = prompt('Enter preset name:', 'my-preset');
+            if (name) ws.send(JSON.stringify({ type: 'savePreset', name }));
+        }
+        
+        function loadPreset(name) {
+            ws.send(JSON.stringify({ type: 'loadPreset', name }));
+        }
+        
+        function exportPreset() {
+            const name = prompt('Enter preset name to export:');
+            if (name) window.open('/export/' + name);
+        }
+        
+        let midiEnabled = true;
+        function toggleMidi() {
+            midiEnabled = !midiEnabled;
+            const btn = document.getElementById('midiToggle');
+            btn.textContent = midiEnabled ? 'MIDI ON' : 'MIDI OFF';
+            btn.className = midiEnabled ? 'primary' : 'danger';
+            ws.send(JSON.stringify({ type: 'toggleMidi', enabled: midiEnabled }));
+        }
+        
+        function refreshMidi() {
+            ws.send(JSON.stringify({ type: 'refreshMidi' }));
+        }
+        
+        function updateSetting(name, value) {
+            document.getElementById(name + 'Val').textContent = value;
+            ws.send(JSON.stringify({ type: 'setSetting', name, value: parseInt(value) }));
+        }
+        
+        // Handle preset messages
+        const originalOnmessage = ws.onmessage;
+        ws.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            if (data.type === 'presets') {
+                renderPresets(data.presets, data.current);
+            } else if (data.type === 'presetSaved') {
+                loadPresets();
+            } else if (data.type === 'presetLoaded') {
+                document.getElementById('octaveDisplay').textContent = data.octave;
+                loadPresets();
+            } else if (data.type === 'midiToggled') {
+                midiEnabled = data.enabled;
+                const btn = document.getElementById('midiToggle');
+                btn.textContent = midiEnabled ? 'MIDI ON' : 'MIDI OFF';
+                btn.className = midiEnabled ? 'primary' : 'danger';
+            }
+            originalOnmessage.call(this, event);
+        };
+        
+function renderPresets(presetsList, current) {
+            const container = document.getElementById('presetList');
+            if (!container) return;
+            container.innerHTML = presetsList.map(p => 
+                '<div class="preset-item">' +
+                '<span>' + p + (p === current ? ' (active)' : '') + '</span>' +
+                '<div>' +
+                (p !== current ? '<button onclick="loadPreset(\'' + p + '\')">✓</button>' : '') +
+                (p !== 'default' && p !== current ? '<button onclick="deletePreset(\'' + p + '\')" style="margin-left:4px;color:#c62828;">✕</button>' : '') +
+                '</div></div>'
+            ).join('');
+        }
+
+        function deletePreset(name) {
+            if (confirm('Delete preset "' + name + '"?')) {
+                ws.send(JSON.stringify({ type: 'deletePreset', name }));
+            }
+        }
+    </script>
+
+
+</body></html>

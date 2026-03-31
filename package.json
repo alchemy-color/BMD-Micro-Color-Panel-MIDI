@@ -1,0 +1,15 @@
+{
+  "name": "bmd-micro-color-panel",
+  "version": "1.0.0",
+  "description": "DaVinci Resolve Micro Color Panel USB HID controller with MIDI output",
+  "main": "server.mjs",
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "dependencies": {
+    "usb": "^2.11.0",
+    "ws": "^8.16.0",
+    "jzz": "^1.8.0"
+  }
+}

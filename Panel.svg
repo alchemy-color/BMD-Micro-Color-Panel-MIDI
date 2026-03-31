@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="87.085 132.541 360.672 181.163" xmlns:bx="https://boxy-svg.com">
+  <defs>
+    <clipPath id="clip_57">
+      <path transform="matrix(.1,0,0,-.1,0,841.89)" d="M1192.9 3062.2C1185.8 3062.2 1180.06 3056.46 1180.06 3049.38V1277C1180.06 1269.92 1185.8 1264.17 1192.9 1264.17H4759.87C4766.95 1264.17 4772.7 1269.92 4772.7 1277V3049.38C4772.7 3056.46 4766.95 3062.2 4759.87 3062.2Z"/>
+    </clipPath>
+    <clipPath id="clip_112">
+      <path transform="matrix(.1,0,0,-.1,0,841.89)" d="M1192.9 3062.2C1185.8 3062.2 1180.06 3056.46 1180.06 3049.38V1277C1180.06 1269.92 1185.8 1264.17 1192.9 1264.17H4759.87C4766.95 1264.17 4772.7 1269.92 4772.7 1277V3049.38C4772.7 3056.46 4766.95 3062.2 4759.87 3062.2Z"/>
+    </clipPath>
+    <linearGradient id="gradient-1" bx:pinned="true">
+      <stop offset="0" style="stop-color: rgb(57, 57, 57);"/>
+      <stop offset="1" style="stop-color: rgb(18, 18, 18);"/>
+    </linearGradient>
+    <bx:guide x="299.271" y="222.9" angle="90"/>
+    <style>
+      .active-svg { fill: #4fc3f7 !important; }
+    </style>
+  </defs>
+  <g clip-path="url(#clip_57)" transform="matrix(1, 0, 0, 1, -30.094, -402.563995)">
+    <title>BACKGROUND</title>
+    <path id="svg-bg" d="M 461.824 535.669 L 133.454 535.669 C 124.958 535.669 118.006 542.62 118.006 551.116 L 118.006 700.026 C 118.006 708.522 124.958 715.473 133.454 715.473 L 461.824 715.473 C 470.32 715.473 477.271 708.522 477.271 700.026 L 477.271 551.116 C 477.271 542.62 470.32 535.669 461.824 535.669" style="fill: rgb(47, 47, 47);">
+      <title>BACKGROUND</title>
+    </path>
+  </g>
+  <g transform="matrix(1, 0, 0, 1, -30.094175, -402.56369)">
+    <title>BUTTONS</title>
+    <path id="svg-btn-12" stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 145.561 592.333 L 131.051 592.333 C 130.528 592.333 130.1 592.76 130.1 593.283 L 130.1 602.483 C 130.1 603.006 130.528 603.435 131.051 603.435 L 145.561 603.435 C 146.084 603.435 146.512 603.006 146.512 602.483 L 146.512 593.283 C 146.512 592.76 146.084 592.333 145.561 592.333 Z" stroke="#000000" style="fill: rgb(26, 26, 26); stroke-width: 0.3px;">
+      <title>AUTO COLOR</title>
+    </path>
+    <path id="svg-btn-13" stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 165.301 592.333 L 150.791 592.333 C 150.268 592.333 149.84 592.76 149.84 593.283 L 149.84 602.483 C 149.84 603.006 150.268 603.435 150.791 603.435 L 165.301 603.435 C 165.824 603.435 166.252 603.006 166.252 602.483 L 166.252 593.283 C 166.252 592.76 165.824 592.333 165.301 592.333 Z" stroke="#000000" style="fill: rgb(26, 26, 26); stroke-width: 0.3px;">
+      <title>OFFSET</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 145.561 607.125 L 131.051 607.125 C 130.528 607.125 130.1 607.552 130.1 608.076 L 130.1 617.276 C 130.1 617.799 130.528 618.227 131.051 618.227 L 145.561 618.227 C 146.084 618.227 146.512 617.799 146.512 617.276 L 146.512 608.076 C 146.512 607.552 146.084 607.125 145.561 607.125 Z" stroke="#000000" style="fill: rgb(26, 26, 26); stroke-width: 0.3px;">
+      <title>COPY</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 165.301 607.125 L 150.791 607.125 C 150.268 607.125 149.84 607.552 149.84 608.076 L 149.84 617.276 C 149.84 617.799 150.268 618.227 150.791 618.227 L 165.301 618.227 C 165.824 618.227 166.252 617.799 166.252 617.276 L 166.252 608.076 C 166.252 607.552 165.824 607.125 165.301 607.125 Z" stroke="#000000" style="fill: rgb(26, 26, 26); stroke-width: 0.3px;">
+      <title>PASTE</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 145.561 621.917 L 131.051 621.917 C 130.528 621.917 130.1 622.345 130.1 622.868 L 130.1 632.068 C 130.1 632.591 130.528 633.02 131.051 633.02 L 145.561 633.02 C 146.084 633.02 146.512 632.591 146.512 632.068 L 146.512 622.868 C 146.512 622.345 146.084 621.917 145.561 621.917 Z" stroke="#000000" style="fill: rgb(26, 26, 26); stroke-width: 0.3px;">
+      <title>UNDO</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 165.301 621.917 L 150.791 621.917 C 150.268 621.917 149.84 622.345 149.84 622.868 L 149.84 632.068 C 149.84 632.591 150.268 633.02 150.791 633.02 L 165.301 633.02 C 165.824 633.02 166.252 632.591 166.252 632.068 L 166.252 622.868 C 166.252 622.345 165.824 621.917 165.301 621.917 Z" stroke="#000000" style="fill: rgb(26, 26, 26); stroke-width: 0.3px;">
+      <title>REDO</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 145.561 636.709 L 131.051 636.709 C 130.528 636.709 130.1 637.137 130.1 637.66 L 130.1 646.86 C 130.1 647.383 130.528 647.812 131.051 647.812 L 145.561 647.812 C 146.084 647.812 146.512 647.383 146.512 646.86 L 146.512 637.66 C 146.512 637.137 146.084 636.709 145.561 636.709 Z" stroke="#000000" style="fill: rgb(26, 26, 26); stroke-width: 0.3px;">
+      <title>DELETE</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 165.301 636.709 L 150.791 636.709 C 150.268 636.709 149.84 637.137 149.84 637.66 L 149.84 646.86 C 149.84 647.383 150.268 647.812 150.791 647.812 L 165.301 647.812 C 165.824 647.812 166.252 647.383 166.252 646.86 L 166.252 637.66 C 166.252 637.137 165.824 636.709 165.301 636.709 Z" stroke="#000000" style="fill: rgb(26, 26, 26); stroke-width: 0.3px;">
+      <title>RESET</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 145.561 651.501 L 131.051 651.501 C 130.528 651.501 130.1 651.929 130.1 652.452 L 130.1 661.652 C 130.1 662.175 130.528 662.604 131.051 662.604 L 145.561 662.604 C 146.084 662.604 146.512 662.175 146.512 661.652 L 146.512 652.452 C 146.512 651.929 146.084 651.501 145.561 651.501 Z" stroke="#000000" style="fill: rgb(26, 26, 26); stroke-width: 0.3px;">
+      <title>BYPASS</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 165.301 651.501 L 150.791 651.501 C 150.268 651.501 149.84 651.929 149.84 652.452 L 149.84 661.652 C 149.84 662.175 150.268 662.604 150.791 662.604 L 165.301 662.604 C 165.824 662.604 166.252 662.175 166.252 661.652 L 166.252 652.452 C 166.252 651.929 165.824 651.501 165.301 651.501 Z" stroke="#000000" style="fill: rgb(26, 26, 26); stroke-width: 0.3px;">
+      <title>DISABLE</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 145.561 672.347 L 131.051 672.347 C 130.528 672.347 130.1 672.775 130.1 673.298 L 130.1 682.498 C 130.1 683.021 130.528 683.45 131.051 683.45 L 145.561 683.45 C 146.084 683.45 146.512 683.021 146.512 682.498 L 146.512 673.298 C 146.512 672.775 146.084 672.347 145.561 672.347 Z" stroke="#000000" style="fill: rgb(26, 26, 26); stroke-width: 0.3px;">
+      <title>USER</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 165.301 672.347 L 150.791 672.347 C 150.268 672.347 149.84 672.775 149.84 673.298 L 149.84 682.498 C 149.84 683.021 150.268 683.45 150.791 683.45 L 165.301 683.45 C 165.824 683.45 166.252 683.021 166.252 682.498 L 166.252 673.298 C 166.252 672.775 165.824 672.347 165.301 672.347 Z" stroke="#000000" style="fill: rgb(26, 26, 26); stroke-width: 0.3px;">
+      <title>LOOP</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 145.505 687.139 L 130.996 687.139 C 130.473 687.139 130.045 687.567 130.045 688.09 L 130.045 697.29 C 130.045 697.813 130.473 698.242 130.996 698.242 L 145.505 698.242 C 146.029 698.242 146.457 697.813 146.457 697.29 L 146.457 688.09 C 146.457 687.567 146.029 687.139 145.505 687.139 Z" stroke="#000000" style="fill: rgb(26, 26, 26); stroke-width: 0.3px;">
+      <title>SHIFT UP</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 165.247 687.139 L 150.737 687.139 C 150.214 687.139 149.786 687.567 149.786 688.09 L 149.786 697.29 C 149.786 697.813 150.214 698.242 150.737 698.242 L 165.247 698.242 C 165.77 698.242 166.198 697.813 166.198 697.29 L 166.198 688.09 C 166.198 687.567 165.77 687.139 165.247 687.139 Z" stroke="#000000" style="fill: rgb(26, 26, 26); stroke-width: 0.3px;">
+      <title>SHIFT DOWN</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 200.555 592.333 L 186.046 592.333 C 185.523 592.333 185.095 592.76 185.095 593.283 L 185.095 602.483 C 185.095 603.006 185.523 603.435 186.046 603.435 L 200.555 603.435 C 201.079 603.435 201.507 603.006 201.507 602.483 L 201.507 593.283 C 201.507 592.76 201.079 592.333 200.555 592.333 Z" stroke="#000000" style="fill: rgb(26, 26, 26); stroke-width: 0.3px;">
+      <title>PLAY STILL</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 220.291 592.333 L 205.781 592.333 C 205.258 592.333 204.83 592.76 204.83 593.283 L 204.83 602.483 C 204.83 603.006 205.258 603.435 205.781 603.435 L 220.291 603.435 C 220.814 603.435 221.242 603.006 221.242 602.483 L 221.242 593.283 C 221.242 592.76 220.814 592.333 220.291 592.333 Z" stroke="#000000" style="fill: rgb(26, 26, 26); stroke-width: 0.3px;">
+      <title>WIPE STILL</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 240.029 592.333 L 225.519 592.333 C 224.996 592.333 224.568 592.76 224.568 593.283 L 224.568 602.483 C 224.568 603.006 224.996 603.435 225.519 603.435 L 240.029 603.435 C 240.552 603.435 240.98 603.006 240.98 602.483 L 240.98 593.283 C 240.98 592.76 240.552 592.333 240.029 592.333 Z" stroke="#000000" style="fill: rgb(26, 26, 26); stroke-width: 0.3px;">
+      <title>GRAB STILL</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 274.961 592.333 L 260.452 592.333 C 259.929 592.333 259.5 592.76 259.5 593.283 L 259.5 602.483 C 259.5 603.006 259.929 603.435 260.452 603.435 L 274.961 603.435 C 275.484 603.435 275.913 603.006 275.913 602.483 L 275.913 593.283 C 275.913 592.76 275.484 592.333 274.961 592.333 Z" stroke="#000000" style="fill: rgb(26, 26, 26); stroke-width: 0.3px;">
+      <title>H/LITE</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 294.81 592.333 L 280.3 592.333 C 279.777 592.333 279.349 592.76 279.349 593.283 L 279.349 602.483 C 279.349 603.006 279.777 603.435 280.3 603.435 L 294.81 603.435 C 295.333 603.435 295.761 603.006 295.761 602.483 L 295.761 593.283 C 295.761 592.76 295.333 592.333 294.81 592.333 Z" stroke="#000000" style="fill: rgb(26, 26, 26); stroke-width: 0.3px;">
+      <title>VIEWER</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 314.659 592.333 L 300.149 592.333 C 299.626 592.333 299.198 592.76 299.198 593.283 L 299.198 602.483 C 299.198 603.006 299.626 603.435 300.149 603.435 L 314.659 603.435 C 315.182 603.435 315.61 603.006 315.61 602.483 L 315.61 593.283 C 315.61 592.76 315.182 592.333 314.659 592.333 Z" stroke="#000000" style="fill: rgb(26, 26, 26); stroke-width: 0.3px;">
+      <title>CURSOR</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 334.508 592.333 L 319.998 592.333 C 319.475 592.333 319.047 592.76 319.047 593.283 L 319.047 602.483 C 319.047 603.006 319.475 603.435 319.998 603.435 L 334.508 603.435 C 335.031 603.435 335.459 603.006 335.459 602.483 L 335.459 593.283 C 335.459 592.76 335.031 592.333 334.508 592.333 Z" stroke="#000000" style="fill: rgb(26, 26, 26); stroke-width: 0.3px;">
+      <title>SELECT</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 285.036 607.084 L 270.527 607.084 C 270.004 607.084 269.575 607.512 269.575 608.035 L 269.575 617.235 C 269.575 617.758 270.004 618.187 270.527 618.187 L 285.036 618.187 C 285.559 618.187 285.988 617.758 285.988 617.235 L 285.988 608.035 C 285.988 607.512 285.559 607.084 285.036 607.084 Z" stroke="#000000" style="fill: rgb(26, 26, 26); stroke-width: 0.3px;">
+      <title>RESET LIFT</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 304.774 607.084 L 290.264 607.084 C 289.741 607.084 289.313 607.512 289.313 608.035 L 289.313 617.235 C 289.313 617.758 289.741 618.187 290.264 618.187 L 304.774 618.187 C 305.297 618.187 305.725 617.758 305.725 617.235 L 305.725 608.035 C 305.725 607.512 305.297 607.084 304.774 607.084 Z" stroke="#000000" style="fill: rgb(26, 26, 26); stroke-width: 0.3px;">
+      <title>RESET GAMMA</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 324.51 607.084 L 310 607.084 C 309.477 607.084 309.049 607.512 309.049 608.035 L 309.049 617.235 C 309.049 617.758 309.477 618.187 310 618.187 L 324.51 618.187 C 325.033 618.187 325.461 617.758 325.461 617.235 L 325.461 608.035 C 325.461 607.512 325.033 607.084 324.51 607.084 Z" stroke="#000000" style="fill: rgb(26, 26, 26); stroke-width: 0.3px;">
+      <title>RESET GAIN</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 369.438 592.333 L 354.928 592.333 C 354.405 592.333 353.977 592.76 353.977 593.283 L 353.977 602.483 C 353.977 603.006 354.405 603.435 354.928 603.435 L 369.438 603.435 C 369.961 603.435 370.389 603.006 370.389 602.483 L 370.389 593.283 C 370.389 592.76 369.961 592.333 369.438 592.333 Z" stroke="#000000" style="fill: rgb(26, 26, 26); stroke-width: 0.3px;">
+      <title>ADD NODE</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 389.175 592.333 L 374.664 592.333 C 374.141 592.333 373.713 592.76 373.713 593.283 L 373.713 602.483 C 373.713 603.006 374.141 603.435 374.664 603.435 L 389.175 603.435 C 389.697 603.435 390.125 603.006 390.125 602.483 L 390.125 593.283 C 390.125 592.76 389.697 592.333 389.175 592.333 Z" stroke="#000000" style="fill: rgb(26, 26, 26); stroke-width: 0.3px;">
+      <title>ADD WINDOW</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 408.911 592.333 L 394.401 592.333 C 393.878 592.333 393.45 592.76 393.45 593.283 L 393.45 602.483 C 393.45 603.006 393.878 603.435 394.401 603.435 L 408.911 603.435 C 409.434 603.435 409.862 603.006 409.862 602.483 L 409.862 593.283 C 409.862 592.76 409.434 592.333 408.911 592.333 Z" stroke="#000000" style="fill: rgb(26, 26, 26); stroke-width: 0.3px;">
+      <title>ADD KEYFRM</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 444.162 592.333 L 429.652 592.333 C 429.129 592.333 428.701 592.76 428.701 593.283 L 428.701 602.483 C 428.701 603.006 429.129 603.435 429.652 603.435 L 444.162 603.435 C 444.685 603.435 445.113 603.006 445.113 602.483 L 445.113 593.283 C 445.113 592.76 444.685 592.333 444.162 592.333 Z" stroke="#000000" style="fill: rgb(26, 26, 26); stroke-width: 0.3px;">
+      <title>PREV STILL</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 463.904 592.333 L 449.393 592.333 C 448.87 592.333 448.443 592.76 448.443 593.283 L 448.443 602.483 C 448.443 603.006 448.87 603.435 449.393 603.435 L 463.904 603.435 C 464.427 603.435 464.854 603.006 464.854 602.483 L 464.854 593.283 C 464.854 592.76 464.427 592.333 463.904 592.333 Z" stroke="#000000" style="fill: rgb(26, 26, 26); stroke-width: 0.3px;">
+      <title>NEXT STILL</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 444.162 607.125 L 429.652 607.125 C 429.129 607.125 428.701 607.552 428.701 608.076 L 428.701 617.276 C 428.701 617.799 429.129 618.227 429.652 618.227 L 444.162 618.227 C 444.685 618.227 445.113 617.799 445.113 617.276 L 445.113 608.076 C 445.113 607.552 444.685 607.125 444.162 607.125 Z" stroke="#000000" style="fill: rgb(26, 26, 26); stroke-width: 0.3px;">
+      <title>PREV KEYFRM</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 463.904 607.125 L 449.393 607.125 C 448.87 607.125 448.443 607.552 448.443 608.076 L 448.443 617.276 C 448.443 617.799 448.87 618.227 449.393 618.227 L 463.904 618.227 C 464.427 618.227 464.854 617.799 464.854 617.276 L 464.854 608.076 C 464.854 607.552 464.427 607.125 463.904 607.125 Z" stroke="#000000" style="fill: rgb(26, 26, 26); stroke-width: 0.3px;">
+      <title>NEXT KEYFRM</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 444.162 621.917 L 429.652 621.917 C 429.129 621.917 428.701 622.345 428.701 622.868 L 428.701 632.068 C 428.701 632.591 429.129 633.02 429.652 633.02 L 444.162 633.02 C 444.685 633.02 445.113 632.591 445.113 632.068 L 445.113 622.868 C 445.113 622.345 444.685 621.917 444.162 621.917 Z" stroke="#000000" style="fill: rgb(26, 26, 26); stroke-width: 0.3px;">
+      <title>PREV NODE</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 463.904 621.917 L 449.393 621.917 C 448.87 621.917 448.443 622.345 448.443 622.868 L 448.443 632.068 C 448.443 632.591 448.87 633.02 449.393 633.02 L 463.904 633.02 C 464.427 633.02 464.854 632.591 464.854 632.068 L 464.854 622.868 C 464.854 622.345 464.427 621.917 463.904 621.917 Z" stroke="#000000" style="fill: rgb(26, 26, 26); stroke-width: 0.3px;">
+      <title>NEXT NODE</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 444.162 636.709 L 429.652 636.709 C 429.129 636.709 428.701 637.137 428.701 637.66 L 428.701 646.86 C 428.701 647.383 429.129 647.812 429.652 647.812 L 444.162 647.812 C 444.685 647.812 445.113 647.383 445.113 646.86 L 445.113 637.66 C 445.113 637.137 444.685 636.709 444.162 636.709 Z" stroke="#000000" style="fill: rgb(26, 26, 26); stroke-width: 0.3px;">
+      <title>PREV FRAME</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 463.904 636.709 L 449.393 636.709 C 448.87 636.709 448.443 637.137 448.443 637.66 L 448.443 646.86 C 448.443 647.383 448.87 647.812 449.393 647.812 L 463.904 647.812 C 464.427 647.812 464.854 647.383 464.854 646.86 L 464.854 637.66 C 464.854 637.137 464.427 636.709 463.904 636.709 Z" stroke="#000000" style="fill: rgb(26, 26, 26); stroke-width: 0.3px;">
+      <title>NEXT FRAME</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 444.162 651.501 L 429.652 651.501 C 429.129 651.501 428.701 651.929 428.701 652.452 L 428.701 661.652 C 428.701 662.175 429.129 662.604 429.652 662.604 L 444.162 662.604 C 444.685 662.604 445.113 662.175 445.113 661.652 L 445.113 652.452 C 445.113 651.929 444.685 651.501 444.162 651.501 Z" stroke="#000000" style="fill: rgb(26, 26, 26); stroke-width: 0.3px;">
+      <title>PREV CLIP</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 463.904 651.501 L 449.393 651.501 C 448.87 651.501 448.443 651.929 448.443 652.452 L 448.443 661.652 C 448.443 662.175 448.87 662.604 449.393 662.604 L 463.904 662.604 C 464.427 662.604 464.854 662.175 464.854 661.652 L 464.854 652.452 C 464.854 651.929 464.427 651.501 463.904 651.501 Z" stroke="#000000" style="fill: rgb(26, 26, 26); stroke-width: 0.3px;">
+      <title>NEXT CLIP</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 444.108 672.347 L 429.598 672.347 C 429.075 672.347 428.647 672.775 428.647 673.298 L 428.647 682.498 C 428.647 683.021 429.075 683.45 429.598 683.45 L 444.108 683.45 C 444.631 683.45 445.059 683.021 445.059 682.498 L 445.059 673.298 C 445.059 672.775 444.631 672.347 444.108 672.347 Z" stroke="#000000" style="fill: rgb(26, 26, 26); stroke-width: 0.3px;">
+      <title>RWD</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 463.85 672.347 L 449.34 672.347 C 448.817 672.347 448.389 672.775 448.389 673.298 L 448.389 682.498 C 448.389 683.021 448.817 683.45 449.34 683.45 L 463.85 683.45 C 464.373 683.45 464.801 683.021 464.801 682.498 L 464.801 673.298 C 464.801 672.775 464.373 672.347 463.85 672.347 Z" stroke="#000000" style="fill: rgb(26, 26, 26); stroke-width: 0.3px;">
+      <title>FWD</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 463.85 687.139 L 429.598 687.139 C 429.075 687.139 428.647 687.567 428.647 688.09 L 428.647 697.29 C 428.647 697.813 429.075 698.242 429.598 698.242 L 463.85 698.242 C 464.373 698.242 464.801 697.813 464.801 697.29 L 464.801 688.09 C 464.801 687.567 464.373 687.139 463.85 687.139 Z" stroke="#000000" style="fill: rgb(26, 26, 26); stroke-width: 0.3px;">
+      <title>STOP</title>
+    </path>
+  </g>
+  <g>
+    <title>ROTARY KNOBS</title>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 103.345 171.478 C 103.345 168.557 105.713 166.19 108.634 166.19 C 111.554 166.19 113.922 168.557 113.922 171.478 C 113.922 174.399 111.554 176.766 108.634 176.766 C 105.713 176.766 103.345 174.399 103.345 171.478 Z" stroke="#000000" style="fill: rgb(27, 27, 27); stroke-width: 0.3px;">
+      <title>Y LIFT</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 130.629 171.478 C 130.629 168.557 132.996 166.19 135.917 166.19 C 138.838 166.19 141.205 168.557 141.205 171.478 C 141.205 174.399 138.838 176.766 135.917 176.766 C 132.996 176.766 130.629 174.399 130.629 171.478 Z" stroke="#000000" style="fill: rgb(27, 27, 27); stroke-width: 0.3px;">
+      <title>Y GAMMA</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 157.911 171.478 C 157.911 168.557 160.279 166.19 163.199 166.19 C 166.12 166.19 168.488 168.557 168.488 171.478 C 168.488 174.399 166.12 176.766 163.199 176.766 C 160.279 176.766 157.911 174.399 157.911 171.478 Z" stroke="#000000" style="fill: rgb(27, 27, 27); stroke-width: 0.3px;">
+      <title>Y GAIN</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 185.207 171.478 C 185.207 168.557 187.574 166.19 190.495 166.19 C 193.416 166.19 195.783 168.557 195.783 171.478 C 195.783 174.399 193.416 176.766 190.495 176.766 C 187.574 176.766 185.207 174.399 185.207 171.478 Z" stroke="#000000" style="fill: rgb(27, 27, 27); stroke-width: 0.3px;">
+      <title>CONTRAST</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 221.179 171.478 C 221.179 168.557 223.546 166.19 226.467 166.19 C 229.388 166.19 231.755 168.557 231.755 171.478 C 231.755 174.399 229.388 176.766 226.467 176.766 C 223.546 176.766 221.179 174.399 221.179 171.478 Z" stroke="#000000" style="fill: rgb(27, 27, 27); stroke-width: 0.3px;">
+      <title>PIVOT</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 248.462 171.478 C 248.462 168.557 250.829 166.19 253.75 166.19 C 256.671 166.19 259.038 168.557 259.038 171.478 C 259.038 174.399 256.671 176.766 253.75 176.766 C 250.829 176.766 248.462 174.399 248.462 171.478 Z" stroke="#000000" style="fill: rgb(27, 27, 27); stroke-width: 0.3px;">
+      <title>MID DETAIL</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 275.745 171.478 C 275.745 168.557 278.112 166.19 281.033 166.19 C 283.954 166.19 286.321 168.557 286.321 171.478 C 286.321 174.399 283.954 176.766 281.033 176.766 C 278.112 176.766 275.745 174.399 275.745 171.478 Z" stroke="#000000" style="fill: rgb(27, 27, 27); stroke-width: 0.3px;">
+      <title>COLOR BOOST</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 303.028 171.478 C 303.028 168.557 305.395 166.19 308.316 166.19 C 311.237 166.19 313.604 168.557 313.604 171.478 C 313.604 174.399 311.237 176.766 308.316 176.766 C 305.395 176.766 303.028 174.399 303.028 171.478 Z" stroke="#000000" style="fill: rgb(27, 27, 27); stroke-width: 0.3px;">
+      <title>SHADOWS</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 339 171.478 C 339 168.557 341.367 166.19 344.288 166.19 C 347.209 166.19 349.576 168.557 349.576 171.478 C 349.576 174.399 347.209 176.766 344.288 176.766 C 341.367 176.766 339 174.399 339 171.478 Z" stroke="#000000" style="fill: rgb(27, 27, 27); stroke-width: 0.3px;">
+      <title>HIGHLIGHTS</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 366.283 171.478 C 366.283 168.557 368.65 166.19 371.571 166.19 C 374.492 166.19 376.859 168.557 376.859 171.478 C 376.859 174.399 374.492 176.766 371.571 176.766 C 368.65 176.766 366.283 174.399 366.283 171.478 Z" stroke="#000000" style="fill: rgb(27, 27, 27); stroke-width: 0.3px;">
+      <title>SATURATION</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 393.566 171.478 C 393.566 168.557 395.933 166.19 398.854 166.19 C 401.775 166.19 404.142 168.557 404.142 171.478 C 404.142 174.399 401.775 176.766 398.854 176.766 C 395.933 176.766 393.566 174.399 393.566 171.478 Z" stroke="#000000" style="fill: rgb(27, 27, 27); stroke-width: 0.3px;">
+      <title>HUE</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 420.849 171.478 C 420.849 168.557 423.216 166.19 426.137 166.19 C 429.058 166.19 431.425 168.557 431.425 171.478 C 431.425 174.399 429.058 176.766 426.137 176.766 C 423.216 176.766 420.849 174.399 420.849 171.478 Z" stroke="#000000" style="fill: rgb(27, 27, 27); stroke-width: 0.3px;">
+      <title>LUM MIX</title>
+    </path>
+  </g>
+  <g clip-path="url(#clip_112)" transform="matrix(1, 0, 0, 1, -30.094175, -402.56369)" style="">
+    <title>WHEELS</title>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 212.473 625.464 C 232.118 625.464 248.044 641.389 248.044 661.034 C 248.044 680.68 232.118 696.607 212.473 696.607 C 192.828 696.607 176.902 680.68 176.902 661.034 C 176.902 641.389 192.828 625.464 212.473 625.464 Z" stroke="#000000" style="fill: rgb(27, 27, 27); stroke-width: 0.3px;">
+      <title>L WHEEL</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 213.036 644.432 C 222.367 644.432 229.931 651.996 229.931 661.327 C 229.931 670.658 222.367 678.223 213.036 678.223 C 203.705 678.223 196.141 670.658 196.141 661.327 C 196.141 651.996 203.705 644.432 213.036 644.432 Z" style="fill-rule: nonzero; paint-order: fill; stroke: rgb(0, 0, 0); fill: rgb(20, 20, 20); stroke-width: 0.3px;">
+      <title>L BALL</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 297.932 625.464 C 317.577 625.464 333.503 641.389 333.503 661.034 C 333.503 680.68 317.577 696.607 297.932 696.607 C 278.287 696.607 262.361 680.68 262.361 661.034 C 262.361 641.389 278.287 625.464 297.932 625.464 Z" stroke="#000000" style="fill: rgb(27, 27, 27); stroke-width: 0.3px;">
+      <title>C WHEEL</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 297.639 644.432 C 306.97 644.432 314.534 651.996 314.534 661.327 C 314.534 670.658 306.97 678.223 297.639 678.223 C 288.308 678.223 280.744 670.658 280.744 661.327 C 280.744 651.996 288.308 644.432 297.639 644.432 Z" stroke="#000000" style="fill: rgb(20, 20, 20); stroke-width: 0.3px;">
+      <title>C BALL</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 382.241 625.756 C 401.886 625.756 417.812 641.681 417.812 661.326 C 417.812 680.972 401.886 696.899 382.241 696.899 C 362.596 696.899 346.67 680.972 346.67 661.326 C 346.67 641.681 362.596 625.756 382.241 625.756 Z" stroke="#000000" style="fill: rgb(27, 27, 27); stroke-width: 0.3px;">
+      <title>R WHEEL</title>
+    </path>
+    <path stroke-linecap="butt" stroke-miterlimit="10" stroke-linejoin="miter" d="M 382.241 644.432 C 391.572 644.432 399.136 651.996 399.136 661.327 C 399.136 670.658 391.572 678.223 382.241 678.223 C 372.91 678.223 365.346 670.658 365.346 661.327 C 365.346 651.996 372.91 644.432 382.241 644.432 Z" stroke="#000000" style="fill: rgb(20, 20, 20); stroke-width: 0.3px;">
+      <title>R BALL</title>
+    </path>
+  </g>
+</svg>
