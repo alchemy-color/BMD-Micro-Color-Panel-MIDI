@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<settings>
+  <!-- Rotary 3: CONTRAST → Note 63 (C5) -->
+  <setting channel="1" note="63" command_string="Contrast"/>
+  <!-- Rotary 5: MID DETAIL → Note 65 (E5) -->
+  <setting channel="1" note="65" command_string="Clarity"/>
+  <!-- Rotary 6: COLOR BOOST → Note 66 (F5) -->
+  <setting channel="1" note="66" command_string="Vibrance"/>
+  <!-- Rotary 7: SHADOWS → Note 67 (G5) -->
+  <setting channel="1" note="67" command_string="Shadows"/>
+  <!-- Rotary 8: HIGHLIGHTS → Note 68 (G#5) -->
+  <setting channel="1" note="68" command_string="Highlights"/>
+  <!-- Rotary 9: SATURATION → Note 69 (A5) -->
+  <setting channel="1" note="69" command_string="Saturation"/>
+  <!-- RWD → Previous Photo -->
+  <setting channel="1" note="37" command_string="Previous Photo"/>
+  <!-- FWD → Next Photo -->
+  <setting channel="1" note="38" command_string="Next Photo"/>
+  <!-- STOP → Toggle View -->
+  <setting channel="1" note="39" command_string="Toggle View"/>
+</settings>
