@@ -107,6 +107,21 @@ Adjust sensitivity in the Settings panel:
 - **ws** - WebSocket server
 - **JZZ** - MIDI I/O
 
+## Known Issues & Limitations
+
+### Wheels
+- **Direction detection incomplete** - The wheel delta detection works but only registers -1 regardless of turn direction. The raw values show alternating patterns that haven't been fully resolved into reliable left/right differentiation.
+- **Speed affects frequency, not value** - Moving the wheel faster generates more events but the step value remains constant. True velocity-sensitive output would require additional processing.
+
+### Rotary Encoders
+- **No response in some sessions** - Rotaries may not register MIDI output in certain conditions. The raw encoder data (4096 per detent) is correctly parsed but may need additional debugging.
+- **Noise at rest** - Minor jitter in encoder values may occur at extremes (0 or 127).
+
+### General
+- **No MIDI input** - The panel only sends HID data; it cannot receive MIDI back. Values are accumulated client-side only.
+- **One-way communication** - Panel lights cannot be controlled from the server (attempts to set backlight have not succeeded).
+- **Platform limited** - Requires sudo for USB HID, currently tested on macOS.
+
 ## Contributing
 
 1. Fork the repo
