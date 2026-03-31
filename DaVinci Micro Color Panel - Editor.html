@@ -44,32 +44,30 @@
         button.primary { background: #fea701; color: #000; border-color: #fea701; }
         button.danger { border-color: #c62828; }
         
-        .main-area { display: flex; gap: 15px; flex: 1; min-height: 0; }
+        .main-area { display: flex; gap: 15px; flex: 1; min-height: 0; overflow-y: auto; }
         
-        .left-area { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+        .left-area { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow-y: auto; }
         
         .canvas-area {
-            background: #222;
-            border-radius: 8px;
             position: relative;
-            flex: 1;
-            overflow: auto;
             display: flex;
             align-items: flex-start;
             justify-content: center;
+            padding: 12px 0;
+            min-height: min-content;
         }
         
         .panel-wrapper {
             position: relative;
-            width: 1400px;
+            width: min(100%, 1400px);
             margin: 0 auto;
-            padding: 100px 20px;
-            flex-shrink: 0;
+            padding: 0;
         }
         
         .panel-svg {
             display: block;
-            width: 1400px;
+            width: 100%;
+            max-width: 1400px;
             height: auto;
             margin: 0 auto;
         }
@@ -158,7 +156,11 @@
             border-color: #fff; 
         }
         
-        .side-panel { width: 280px; display: flex; flex-direction: column; }
+        .side-panel { width: 280px; display: flex; flex-direction: column; min-height: 0; height: 100%; overflow-y: auto; }
+        .left-sidebar { width: 300px; }
+        .right-sidebar { width: 300px; }
+        .panel-fill { display: flex; flex-direction: column; flex: 1; min-height: 140px; overflow: hidden; }
+        .event-log-fill { flex: 1; min-height: 0; max-height: 100%; overflow-y: auto; overflow-x: hidden; }
         
         .panel-section {
             background: #222;
@@ -203,10 +205,25 @@
         .status.connected { background: #2e7d32; }
         .status.disconnected { background: #c62828; }
         
-        .preset-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
-        .preset-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #333; border-radius: 6px; }
-        .preset-item button { padding: 4px 12px; }
-        .preset-item .active { background: #fea701; color: #000; }
+        .preset-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+        .preset-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; background: #333; border-radius: 6px; font-size: 10px; }
+        .preset-item button { padding: 2px 8px; font-size: 10px; border-color: #666; }
+        .preset-item button.load { color: #4caf50; border-color: #666; }
+        .preset-item button.delete { color: #c62828; border-color: #666; }
+
+        .section-subtitle { font-size: 11px; color: #aaa; margin-bottom: 6px; }
+        .row { display: flex; align-items: center; gap: 8px; }
+        .row + .row { margin-top: 8px; }
+        .midi-device-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin-bottom: 8px; }
+        .status-note { font-size: 10px; color: #888; margin-top: 6px; }
+        .field-label { font-size: 11px; color: #aaa; margin-bottom: 6px; margin-top: 8px; }
+        .mode-bar {
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            padding: 8px;
+        }
     </style>
 </head>
 <body>
@@ -220,6 +237,154 @@
     </div>
     
     <div class="main-area">
+        <div class="side-panel left-sidebar">
+            <div class="panel-section">
+                <h3>Label Presets</h3>
+                <div class="row" style="margin-top: 4px; margin-bottom: 15px;">
+                    <button onclick="saveLayoutManager()" class="primary">Save</button>
+                    <button onclick="exportLayoutManager()">Export</button>
+                </div>
+                <div class="preset-list" id="layoutList">Loading...</div>
+                <div class="status-note">Load `Default` to reset names.</div>
+            </div>
+            <div class="panel-section">
+                <h3>Calibration</h3>
+                <div class="section-subtitle">Wheel 360</div>
+                <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
+                    <select id="calWheelId" style="flex:1;padding:5px;background:#333;border:1px solid #555;color:#fff;border-radius:4px;">
+                        <option value="left">Left</option>
+                        <option value="center">Center</option>
+                        <option value="right">Right</option>
+                    </select>
+                    <button id="calWheelBtn" onclick="toggleWheelCalibration()" style="padding:4px 10px;">Start</button>
+                </div>
+                <div id="calWheelStatus" style="font-size:10px;color:#888;margin-bottom:10px;">Idle</div>
+
+                <div class="section-subtitle">Rotary</div>
+                <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
+                    <select id="calRotaryId" style="flex:1;padding:5px;background:#333;border:1px solid #555;color:#fff;border-radius:4px;">
+                        <option value="0">1</option><option value="1">2</option><option value="2">3</option><option value="3">4</option>
+                        <option value="4">5</option><option value="5">6</option><option value="6">7</option><option value="7">8</option>
+                        <option value="8">9</option><option value="9">10</option><option value="10">11</option><option value="11">12</option>
+                    </select>
+                    <button id="calRotaryBtn" onclick="toggleRotaryCalibration()" style="padding:4px 10px;">Start</button>
+                </div>
+                <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
+                    <button onclick="applyRotaryOneToAll()" style="padding:4px 10px;width:100%;">Apply Knob 1 to All Knobs</button>
+                </div>
+                <div id="calRotaryStatus" style="font-size:10px;color:#888;margin-bottom:10px;">Rotate exactly 90° and stop</div>
+
+                <div class="section-subtitle">Ball Direction</div>
+                <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
+                    <select id="calBallId" style="flex:1;padding:5px;background:#333;border:1px solid #555;color:#fff;border-radius:4px;">
+                        <option value="left">Left</option>
+                        <option value="center">Center</option>
+                        <option value="right">Right</option>
+                    </select>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;">
+                    <button onclick="startBallDirectionCalibration('up')" style="padding:4px 0;">Up</button>
+                    <button onclick="startBallDirectionCalibration('down')" style="padding:4px 0;">Down</button>
+                    <button onclick="startBallDirectionCalibration('left')" style="padding:4px 0;">Left</button>
+                    <button onclick="startBallDirectionCalibration('right')" style="padding:4px 0;">Right</button>
+                </div>
+                <div id="calBallStatus" style="font-size:10px;color:#888;margin-top:6px;">Idle</div>
+                <div style="display:flex;gap:8px;margin-top:8px;">
+                    <button onclick="saveCalibrationToStorage()" class="primary">Save</button>
+                    <button onclick="resetCalibrationDefaults()">Reset</button>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <h3>Speed Scales</h3>
+                
+                <div class="section-subtitle">Rotary Encoders (0.1x - 5x)</div>
+                <div id="rotarySpeedControls" style="margin-bottom:10px;">
+                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:6px;">
+                        <div style="text-align:center;font-size:9px;">1</div>
+                        <div style="text-align:center;font-size:9px;">2</div>
+                        <div style="text-align:center;font-size:9px;">3</div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:6px;">
+                        <input type="range" id="rotarySpeed-0" min="0.1" max="5" step="0.1" value="1" onchange="updateSpeedScale('rotary', 0, this.value)" style="width:100%;">
+                        <input type="range" id="rotarySpeed-1" min="0.1" max="5" step="0.1" value="1" onchange="updateSpeedScale('rotary', 1, this.value)" style="width:100%;">
+                        <input type="range" id="rotarySpeed-2" min="0.1" max="5" step="0.1" value="1" onchange="updateSpeedScale('rotary', 2, this.value)" style="width:100%;">
+                    </div>
+                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:6px;">
+                        <div style="text-align:center;font-size:9px;">4</div>
+                        <div style="text-align:center;font-size:9px;">5</div>
+                        <div style="text-align:center;font-size:9px;">6</div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:6px;">
+                        <input type="range" id="rotarySpeed-3" min="0.1" max="5" step="0.1" value="1" onchange="updateSpeedScale('rotary', 3, this.value)" style="width:100%;">
+                        <input type="range" id="rotarySpeed-4" min="0.1" max="5" step="0.1" value="1" onchange="updateSpeedScale('rotary', 4, this.value)" style="width:100%;">
+                        <input type="range" id="rotarySpeed-5" min="0.1" max="5" step="0.1" value="1" onchange="updateSpeedScale('rotary', 5, this.value)" style="width:100%;">
+                    </div>
+                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:6px;">
+                        <div style="text-align:center;font-size:9px;">7</div>
+                        <div style="text-align:center;font-size:9px;">8</div>
+                        <div style="text-align:center;font-size:9px;">9</div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:6px;">
+                        <input type="range" id="rotarySpeed-6" min="0.1" max="5" step="0.1" value="1" onchange="updateSpeedScale('rotary', 6, this.value)" style="width:100%;">
+                        <input type="range" id="rotarySpeed-7" min="0.1" max="5" step="0.1" value="1" onchange="updateSpeedScale('rotary', 7, this.value)" style="width:100%;">
+                        <input type="range" id="rotarySpeed-8" min="0.1" max="5" step="0.1" value="1" onchange="updateSpeedScale('rotary', 8, this.value)" style="width:100%;">
+                    </div>
+                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:6px;">
+                        <div style="text-align:center;font-size:9px;">10</div>
+                        <div style="text-align:center;font-size:9px;">11</div>
+                        <div style="text-align:center;font-size:9px;">12</div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;">
+                        <input type="range" id="rotarySpeed-9" min="0.1" max="5" step="0.1" value="1" onchange="updateSpeedScale('rotary', 9, this.value)" style="width:100%;">
+                        <input type="range" id="rotarySpeed-10" min="0.1" max="5" step="0.1" value="1" onchange="updateSpeedScale('rotary', 10, this.value)" style="width:100%;">
+                        <input type="range" id="rotarySpeed-11" min="0.1" max="5" step="0.1" value="1" onchange="updateSpeedScale('rotary', 11, this.value)" style="width:100%;">
+                    </div>
+                </div>
+                <button onclick="resetAllSpeedScales('rotary')" style="padding:4px 10px;width:100%;margin-bottom:12px;">Reset All Rotary</button>
+
+                <div class="section-subtitle">Jog Wheels</div>
+                <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
+                    <span style="font-size:10px;width:40px;">Left</span>
+                    <input type="range" id="wheelSpeed-left" min="0.1" max="5" step="0.1" value="1" onchange="updateSpeedScale('wheel', 'left', this.value)" style="flex:1;">
+                </div>
+                <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
+                    <span style="font-size:10px;width:40px;">Center</span>
+                    <input type="range" id="wheelSpeed-center" min="0.1" max="5" step="0.1" value="1" onchange="updateSpeedScale('wheel', 'center', this.value)" style="flex:1;">
+                </div>
+                <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
+                    <span style="font-size:10px;width:40px;">Right</span>
+                    <input type="range" id="wheelSpeed-right" min="0.1" max="5" step="0.1" value="1" onchange="updateSpeedScale('wheel', 'right', this.value)" style="flex:1;">
+                </div>
+                <button onclick="resetAllSpeedScales('wheel')" style="padding:4px 10px;width:100%;margin-bottom:12px;">Reset All Wheels</button>
+
+                <div class="section-subtitle">Trackballs</div>
+                <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
+                    <span style="font-size:10px;width:40px;">Left</span>
+                    <input type="range" id="ballSpeed-left" min="0.1" max="5" step="0.1" value="1" onchange="updateSpeedScale('ball', 'left', this.value)" style="flex:1;">
+                </div>
+                <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
+                    <span style="font-size:10px;width:40px;">Center</span>
+                    <input type="range" id="ballSpeed-center" min="0.1" max="5" step="0.1" value="1" onchange="updateSpeedScale('ball', 'center', this.value)" style="flex:1;">
+                </div>
+                <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
+                    <span style="font-size:10px;width:40px;">Right</span>
+                    <input type="range" id="ballSpeed-right" min="0.1" max="5" step="0.1" value="1" onchange="updateSpeedScale('ball', 'right', this.value)" style="flex:1;">
+                </div>
+                <button onclick="resetAllSpeedScales('ball')" style="padding:4px 10px;width:100%;margin-bottom:12px;">Reset All Balls</button>
+
+                <button onclick="resetAllSpeedScales('all')" class="primary" style="padding:6px 10px;width:100%;">Reset All Speeds</button>
+            </div>
+
+            <div class="panel-section">
+                <h3>Event Log</h3>
+                <div style="display:flex;justify-content:flex-start;margin:4px 0;">
+                    <button onclick="document.getElementById('eventLog').innerHTML=''" style="padding:2px 8px;font-size:10px;">Clear</button>
+                </div>
+                <div class="event-log" id="eventLog" style="height: 220px; overflow-y: auto; font-size: 10px;"></div>
+            </div>
+        </div>
+
         <div class="left-area">
             <div class="canvas-area">
                 <div class="panel-wrapper" id="panelWrapper">
@@ -233,6 +398,7 @@
                             </clippath>
                             <style>
                             .active-svg { fill: #4fc3f7 !important; }
+                            .wheel-spin { transform-box: fill-box; transform-origin: center; transition: transform 90ms linear, filter 120ms ease; }
                             .svg-label { font-family: -apple-system, BlinkMacSystemFont, sans-serif; fill: #fff; pointer-events: none; font-weight: bold; }
                             .svg-label-small { font-size: 2.5px; }
                             .svg-label-med { font-size: 3px; }
@@ -316,13 +482,17 @@
             <div class="controls-area" id="controlsArea">
                 <div id="controls2"></div>
             </div>
+            <div class="mode-bar">
+                <button id="nameEditModeBtn" onclick="setEditMode('name')" style="padding: 8px 16px; font-size: 14px;">Label Edit</button>
+                <button id="midiEditModeBtn" onclick="setEditMode('midi')" style="padding: 8px 16px; font-size: 14px;">MIDI Map</button>
+            </div>
         </div>
         
-        <div class="side-panel">
+        <div class="side-panel right-sidebar">
             <div class="panel-section">
                 <h3>MIDI Presets</h3>
                 <div style="margin-bottom: 15px;">
-                    <button onclick="savePreset()" class="primary">Save Current</button>
+                    <button onclick="savePreset()" class="primary">Save</button>
                     <button onclick="exportPreset()">Export</button>
                 </div>
                 <div class="preset-list" id="presetList">
@@ -330,66 +500,54 @@
                 </div>
             </div>
             <div class="panel-section">
-                <h3>MIDI Messages</h3>
-                <div style="margin-bottom: 10px;">
-                    <button id="midiToggle" onclick="toggleMidi()" class="primary">MIDI ON</button>
+                <h3>MIDI Options</h3>
+                <div class="row" style="margin-bottom: 8px;">
+                    <button id="midiToggle" onclick="toggleMidi()" class="danger">MIDI OFF</button>
                 </div>
-                <select id="midiDevice" style="width: calc(100% - 50px); padding: 6px; background: #333; border: 1px solid #555; color: #fff; border-radius: 4px; margin-bottom: 8px;">
-                    <option>Loading...</option>
+
+                <div class="field-label">MIDI Channel</div>
+                <select id="midiChannel" onchange="setMidiChannel(this.value)" style="width:100%; padding: 6px; background: #333; border: 1px solid #555; color: #fff; border-radius: 4px; margin-bottom: 8px;">
+                    <option value="0">1</option><option value="1">2</option><option value="2">3</option><option value="3">4</option>
+                    <option value="4">5</option><option value="5">6</option><option value="6">7</option><option value="7">8</option>
+                    <option value="8">9</option><option value="9">10</option><option value="10">11</option><option value="11">12</option>
+                    <option value="12">13</option><option value="13">14</option><option value="14">15</option><option value="15">16</option>
                 </select>
-                <button onclick="refreshMidi()" style="padding: 4px 8px; width: 42px;">↻</button>
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                    <span style="font-size: 12px; color: #888;">Octave:</span>
+
+                <div class="field-label">Set Octave</div>
+                <div class="row" style="margin-bottom: 8px;">
                     <button id="octaveDown" style="padding: 4px 10px;">▼</button>
                     <span id="octaveDisplay" style="font-size: 12px; min-width: 50px; text-align: center;">0</span>
                     <button id="octaveUp" style="padding: 4px 10px;">▲</button>
                 </div>
-                <div style="display:flex;justify-content:space-between;align-items:center;">
-                    <span style="font-size:11px;color:#888;">MIDI Messages</span>
+
+                <div class="field-label">MIDI Bus</div>
+                <div class="midi-device-row">
+                    <select id="midiDevice" style="width: 100%; padding: 6px; background: #333; border: 1px solid #555; color: #fff; border-radius: 4px;">
+                        <option>Loading...</option>
+                    </select>
+                    <button onclick="refreshMidi()" style="padding: 4px 8px; width: 42px;">↻</button>
+                </div>
+
+                <div class="row" style="margin-top: 8px;">
+                    <button id="appleDlsToggle" onclick="toggleAppleDlsSynth()">Apple DLS OFF</button>
+                </div>
+                <div id="appleDlsStatus" class="status-note">Apple DLS Synth: off</div>
+                <div class="status-note">Click any SVG button/rotary to assign MIDI note</div>
+            </div>
+
+            <div class="panel-section">
+                <h3>MIDI Messages</h3>
+                <div style="display:flex;justify-content:flex-start;align-items:center; margin: 4px 0 6px;">
                     <button onclick="document.getElementById('midiLog').innerHTML=''" style="padding:2px 8px;font-size:10px;">Clear</button>
                 </div>
-                <div class="event-log" id="midiLog" style="height: 150px; overflow-y: auto; font-size: 10px;"></div>
-            </div>
-            <div class="panel-section">
-                <h3>Event Log</h3>
-                <div style="display:flex;justify-content:flex-end;margin-bottom:4px;">
-                    <button onclick="document.getElementById('eventLog').innerHTML=''" style="padding:2px 8px;font-size:10px;">Clear</button>
-                </div>
-                <div class="event-log" id="eventLog" style="height: 150px; overflow-y: auto; font-size: 10px;"></div>
-            </div>
-            <div class="panel-section">
-                <h3>Settings</h3>
-                <div style="margin-bottom: 12px;">
-                    <label style="font-size:11px;color:#888;display:block;margin-bottom:4px;">Rotary Step: <span id="rotaryStepVal">1</span></label>
-                    <input type="range" id="rotaryStep" min="1" max="10" value="1" style="width:100%;" oninput="updateSetting('rotaryStep', this.value)">
-                </div>
-                <div style="margin-bottom: 12px;">
-                    <label style="font-size:11px;color:#888;display:block;margin-bottom:4px;">Rotary Throttle (ms): <span id="rotaryThrottleVal">5</span></label>
-                    <input type="range" id="rotaryThrottle" min="1" max="50" value="5" style="width:100%;" oninput="updateSetting('rotaryThrottle', this.value)">
-                </div>
-                <div style="margin-bottom: 12px;">
-                    <label style="font-size:11px;color:#888;display:block;margin-bottom:4px;">Ball X/Y Step: <span id="ballStepVal">1</span></label>
-                    <input type="range" id="ballStep" min="1" max="20" value="1" style="width:100%;" oninput="updateSetting('ballStep', this.value)">
-                </div>
-                <div style="margin-bottom: 12px;">
-                    <label style="font-size:11px;color:#888;display:block;margin-bottom:4px;">Ball Throttle (ms): <span id="ballThrottleVal">0</span></label>
-                    <input type="range" id="ballThrottle" min="0" max="50" value="0" style="width:100%;" oninput="updateSetting('ballThrottle', this.value)">
-                </div>
-                <div style="margin-bottom: 12px;">
-                    <label style="font-size:11px;color:#888;display:block;margin-bottom:4px;">Wheel Step: <span id="wheelStepVal">1</span></label>
-                    <input type="range" id="wheelStep" min="1" max="20" value="1" style="width:100%;" oninput="updateSetting('wheelStep', this.value)">
-                </div>
-                <div style="margin-bottom: 12px;">
-                    <label style="font-size:11px;color:#888;display:block;margin-bottom:4px;">Wheel Throttle (ms): <span id="wheelThrottleVal">0</span></label>
-                    <input type="range" id="wheelThrottle" min="0" max="50" value="0" style="width:100%;" oninput="updateSetting('wheelThrottle', this.value)">
-                </div>
+                <div class="event-log" id="midiLog" style="height: 220px; overflow-y: auto; font-size: 10px;"></div>
             </div>
         </div>
     </div>
     </div>
     
     <script>
-        const buttonNames = {
+        const defaultButtonNames = {
             12: 'AUTO COLOR', 13: 'OFFSET', 14: 'COPY', 15: 'PASTE',
             16: 'UNDO', 17: 'REDO', 18: 'DELETE', 19: 'RESET',
             20: 'BYPASS', 21: 'DISABLE', 22: 'USER', 23: 'LOOP',
@@ -401,16 +559,23 @@
             44: 'NEXT NODE', 45: 'PREV FRAME', 46: 'NEXT FRAME', 47: 'PREV CLIP',
             48: 'NEXT CLIP', 49: '◀︎', 50: '▶︎', 51: '■'
         };
+        let buttonNames = { ...defaultButtonNames };
         
-        const rotaryNames = {
+        const defaultRotaryNames = {
             0: 'Y LIFT', 1: 'Y GAMMA', 2: 'Y GAIN', 3: 'CONTRAST',
             4: 'PIVOT', 5: 'MID DETAIL', 6: 'COLOR BOOST', 7: 'SHADOWS',
             8: 'HIGHLIGHTS', 9: 'SATURATION', 10: 'HUE', 11: 'LUM MIX'
         };
+        let rotaryNames = { ...defaultRotaryNames };
         
-        const trackballNames = {
+        const defaultTrackballNames = {
             'left': 'L', 'center': 'C', 'right': 'R'
         };
+        let trackballNames = { ...defaultTrackballNames };
+        const defaultWheelNames = {
+            left: 'L', center: 'C', right: 'R'
+        };
+        let wheelNames = { ...defaultWheelNames };
         
         const controlTypes = {
             trackball: { width: 276, height: 276 },
@@ -431,6 +596,9 @@
         let dragOffset = { x: 0, y: 0 };
         let uidCounter = 0;
         let wsConnected = false;
+        let appleDlsSynthEnabled = false;
+        let activeEditMode = 'off';
+        let controlMidiNoteMap = { button: {}, rotary: [] };
         
         // Create WebSocket connection
         const ws = new WebSocket('ws://localhost:8765');
@@ -441,6 +609,8 @@
             document.getElementById('status').className = 'status connected';
             log('WebSocket connected to server');
             loadPresets();
+            ws.send(JSON.stringify({ type: 'getCalibrationAll' }));
+            ws.send(JSON.stringify({ type: 'getControlMidiNoteMap' }));
         };
         
         ws.onclose = () => {
@@ -462,6 +632,12 @@
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
             
+            // Check preset handlers first
+            if (presetHandlers[data.type]) {
+                presetHandlers[data.type](data);
+                return;
+            }
+            
             if (data.type === 'connected') {
                 log('Panel connected!');
                 return;
@@ -477,21 +653,40 @@
                 }
             }
             else if (data.type === 'trackball') {
-                highlightControl('trackball', data.id, true);
-                setTimeout(() => highlightControl('trackball', data.id, false), 100);
-                
                 // Log trackball
                 log(data.id.toUpperCase() + ' Ball: X=' + data.x + ' Y=' + data.y);
+                handleBallCalibrationSample(
+                    data.id,
+                    data.rawX !== undefined ? data.rawX : (data.x || 0),
+                    data.rawY !== undefined ? data.rawY : (data.y || 0)
+                );
+                animateBallIndicator(
+                    data.id,
+                    data.rawX !== undefined ? data.rawX : (data.x || 0),
+                    data.rawY !== undefined ? data.rawY : (data.y || 0)
+                );
             }
             else if (data.type === 'jog') {
-                highlightControl('jog', data.id, true);
-                setTimeout(() => highlightControl('jog', data.id, false), 150);
-                log(data.id.toUpperCase() + ' Wheel: ' + data.value);
+                const direction = data.delta !== undefined ? (data.delta >= 0 ? 'CW' : 'CCW') : (data.value >= 0 ? 'CW' : 'CCW');
+                const speed = data.steps !== undefined ? data.steps : Math.abs(data.value || 1);
+                handleWheelCalibrationSample(data);
+                animateWheelSpin(data.id, direction === 'CW' ? 1 : -1, speed);
+                log(data.id.toUpperCase() + ' Wheel: ' + direction + ' steps=' + speed + (data.delta !== undefined ? (' Δ=' + data.delta) : ''));
             }
             else if (data.type === 'encoder' || data.type === 'rotary') {
-                highlightControl('rotary', data.id, true);
-                setTimeout(() => highlightControl('rotary', data.id, false), 150);
-                log('Rotary ' + (data.id + 1) + ': ' + data.value);
+                handleRotaryCalibrationSample(data);
+                const deltaRaw = Number(data.delta || 0);
+                console.log('[ROTARY-UI] received id=' + data.id + ' delta=' + deltaRaw);
+                if (Math.abs(deltaRaw) >= 80) {
+                    const direction = deltaRaw > 0 ? 1 : -1;
+                    const normalized = Math.abs(deltaRaw) / 3200;
+                    const speed = Math.max(0.16, Math.min(2.3, 0.16 + Math.pow(normalized, 0.52) * 1.9));
+                    console.log('[ROTARY-UI] animating id=' + data.id + ' dir=' + direction + ' speed=' + speed);
+                    animateRotarySpin(data.id, direction, speed);
+                }
+                // Show RAW values for debugging
+                const rawInfo = data.raw !== undefined ? ` raw=${data.raw} last=${data.lastRaw} Δ=${data.delta} det=${data.detents}` : '';
+                log('Rotary ' + (data.id + 1) + ': ' + (data.value || data.detents || 0) + rawInfo);
             }
             else if (data.type === 'midi') {
                 const typeStr = data.midiType === 'note' ? 'NOTE' : 'CC';
@@ -499,7 +694,7 @@
                 const msg = `${typeStr} Ch${ch} Note:${data.note} Vel:${data.velocity}`;
                 const midiLog = document.getElementById('midiLog');
                 if (midiLog) {
-                    midiLog.innerHTML = msg + '<br>' + midiLog.innerHTML;
+                    prependLogLine(midiLog, msg, 400);
                 }
             }
             else if (data.type === 'midiPorts') {
@@ -511,15 +706,117 @@
                     opt.textContent = port;
                     select.appendChild(opt);
                 });
-                select.addEventListener('change', (e) => {
+                select.onchange = (e) => {
                     ws.send(JSON.stringify({ type: 'setMidiDevice', index: e.target.value }));
-                });
+                };
             }
             else if (data.type === 'midiDeviceChanged') {
                 log('MIDI device: ' + data.name);
             }
+            else if (data.type === 'midiChannel') {
+                const ch = Number(data.value);
+                if (Number.isFinite(ch) && ch >= 0 && ch <= 15) {
+                    const el = document.getElementById('midiChannel');
+                    if (el) el.value = String(ch);
+                    refreshElementMidiHints();
+                }
+            }
+            else if (data.type === 'controlMidiNoteMap') {
+                const map = data.map || {};
+                const buttonMap = map.button || {};
+                const rotaryMap = map.rotary || [];
+
+                controlMidiNoteMap.button = {};
+                Object.keys(buttonMap).forEach((k) => {
+                    const id = Number(k);
+                    const n = Number(buttonMap[k]);
+                    if (Number.isFinite(id) && id >= 12 && id <= 51 && Number.isFinite(n) && n >= 0 && n <= 127) {
+                        controlMidiNoteMap.button[id] = Math.round(n);
+                    }
+                });
+
+                controlMidiNoteMap.rotary = new Array(12).fill(null);
+                for (let i = 0; i < 12; i++) {
+                    const n = Number(rotaryMap[i]);
+                    if (Number.isFinite(n) && n >= 0 && n <= 127) {
+                        controlMidiNoteMap.rotary[i] = Math.round(n);
+                    }
+                }
+
+                refreshSvgAssignmentHints();
+            }
+            else if (data.type === 'appleDlsSynthState') {
+                appleDlsSynthEnabled = !!data.enabled;
+                const btn = document.getElementById('appleDlsToggle');
+                const status = document.getElementById('appleDlsStatus');
+                if (btn) {
+                    btn.textContent = appleDlsSynthEnabled ? 'Apple DLS ON' : 'Apple DLS OFF';
+                    btn.className = appleDlsSynthEnabled ? 'primary' : '';
+                }
+                if (status) {
+                    const port = data.port ? ` (${data.port})` : '';
+                    status.textContent = data.error ? data.error : `Apple DLS Synth: ${appleDlsSynthEnabled ? 'on' : 'off'}${port}`;
+                }
+            }
             else if (data.type === 'octave') {
                 document.getElementById('octaveDisplay').textContent = data.value;
+                refreshElementMidiHints();
+            }
+            else if (data.type === 'calibrationAll') {
+                const r = data.rotaryUnitsPerDetent;
+                if (Array.isArray(r)) {
+                    for (let i = 0; i < 12; i++) {
+                        const v = Number(r[i]);
+                        if (Number.isFinite(v) && v >= 1 && v <= 200000) {
+                            rotaryUnitsPerDetent[i] = v;
+                        }
+                    }
+                }
+
+                const w = data.wheelDegPerStep || {};
+                ['left', 'center', 'right'].forEach((id) => {
+                    const v = Number(w[id]);
+                    if (Number.isFinite(v) && v > 0.05 && v < 12) {
+                        wheelDegPerStep[id] = v;
+                    }
+                });
+
+                const b = data.ballCalibration || {};
+                ['left', 'center', 'right'].forEach((id) => {
+                    const cfg = b[id] || {};
+                    ballCalibration[id].xSign = cfg.xSign === -1 ? -1 : 1;
+                    ballCalibration[id].ySign = cfg.ySign === -1 ? -1 : 1;
+                    const gain = Number(cfg.gain);
+                    if (Number.isFinite(gain) && gain > 0.01 && gain < 1) {
+                        ballCalibration[id].gain = gain;
+                    }
+                    const dom = Number(cfg.dominance);
+                    if (Number.isFinite(dom) && dom > 1 && dom < 6) {
+                        ballCalibration[id].dominance = dom;
+                    }
+                });
+
+                localStorage.setItem('wheelDegPerStep', JSON.stringify(wheelDegPerStep));
+                localStorage.setItem('ballCalibration', JSON.stringify(ballCalibration));
+                localStorage.setItem('rotaryUnitsPerDetent', JSON.stringify(rotaryUnitsPerDetent));
+                setCalBallStatus('Calibration loaded from server');
+            }
+            else if (data.type === 'rotaryCalibrationAll') {
+                if (Array.isArray(data.unitsPerDetent)) {
+                    for (let i = 0; i < 12; i++) {
+                        const v = Number(data.unitsPerDetent[i]);
+                        if (Number.isFinite(v) && v >= 1 && v <= 200000) {
+                            rotaryUnitsPerDetent[i] = v;
+                        }
+                    }
+                }
+            }
+            else if (data.type === 'rotaryCalibration') {
+                const id = Number(data.id);
+                const v = Number(data.unitsPerDetent);
+                if (Number.isFinite(id) && id >= 0 && id < 12 && Number.isFinite(v) && v >= 1 && v <= 200000) {
+                    rotaryUnitsPerDetent[id] = v;
+                }
             }
         };
         
@@ -602,12 +899,913 @@
         function highlightControl(type, id, active) {
             highlightSvgElement(type, id, active);
         }
+
+        function getMappedNote(controlType, id) {
+            if (controlType === 'button') {
+                return Number.isFinite(controlMidiNoteMap.button[id]) ? controlMidiNoteMap.button[id] : null;
+            }
+            if (controlType === 'rotary') {
+                const n = controlMidiNoteMap.rotary[id];
+                return Number.isFinite(n) ? n : null;
+            }
+            return null;
+        }
+
+        function refreshSvgAssignmentHints() {
+            for (let id = 12; id <= 51; id++) {
+                const el = document.getElementById('svg-btn-' + id);
+                if (!el) continue;
+                const mapped = getMappedNote('button', id);
+                const fallback = (id - 11);
+                el.style.cursor = 'pointer';
+                el.setAttribute('data-midi-note', String(mapped ?? fallback));
+            }
+
+            for (let id = 0; id < 12; id++) {
+                const el = document.getElementById('svg-rot-' + id);
+                if (!el) continue;
+                const mapped = getMappedNote('rotary', id);
+                const fallback = 60 + id;
+                el.style.cursor = 'pointer';
+                el.setAttribute('data-midi-note', String(mapped ?? fallback));
+            }
+
+            refreshElementMidiHints();
+        }
+
+        function getCurrentMidiChannelDisplay() {
+            const chEl = document.getElementById('midiChannel');
+            const ch = Number(chEl ? chEl.value : 0);
+            const safe = Number.isFinite(ch) ? Math.max(0, Math.min(15, ch)) : 0;
+            return safe + 1;
+        }
+
+        function getCurrentOctaveValue() {
+            const octaveEl = document.getElementById('octaveDisplay');
+            const octave = Number(octaveEl ? octaveEl.textContent : 0);
+            return Number.isFinite(octave) ? octave : 0;
+        }
+
+        function refreshElementMidiHints() {
+            const ch = getCurrentMidiChannelDisplay();
+            const octave = getCurrentOctaveValue();
+
+            for (let id = 12; id <= 51; id++) {
+                const el = document.getElementById('svg-btn-' + id);
+                if (!el) continue;
+                const mapped = getMappedNote('button', id);
+                const fallback = (id - 11) + (octave * 12);
+                const note = mapped ?? fallback;
+                el.setAttribute('title', `Ch ${ch} | Note ${note}`);
+            }
+
+            for (let id = 0; id < 12; id++) {
+                const el = document.getElementById('svg-rot-' + id);
+                if (!el) continue;
+                const mapped = getMappedNote('rotary', id);
+                const fallback = 60 + id;
+                const note = mapped ?? fallback;
+                el.setAttribute('title', `Ch ${ch} | Note ${note}`);
+            }
+
+            ['left', 'center', 'right'].forEach((id) => {
+                const wheelEl = document.getElementById('svg-wheel-' + id);
+                if (wheelEl) {
+                    wheelEl.setAttribute('title', `Ch ${ch} | CC 0`);
+                }
+                const ballEl = document.getElementById('svg-ball-' + id);
+                if (ballEl) {
+                    ballEl.setAttribute('title', `Ch ${ch} | CC X=1 Y=2`);
+                }
+            });
+        }
+
+        function assignMidiNoteFromSvg(controlType, id) {
+            const current = getMappedNote(controlType, id);
+            const fallback = controlType === 'button' ? (id - 11) : (60 + id);
+            const suggested = current ?? fallback;
+            const entered = prompt(`Assign MIDI note for ${controlType} ${id}.\n0-127, or empty to reset default.`, String(suggested));
+            if (entered === null) return;
+
+            const trimmed = entered.trim();
+            let note = null;
+            if (trimmed !== '') {
+                const n = Number(trimmed);
+                if (!Number.isFinite(n) || n < 0 || n > 127) {
+                    log('[MAP] Invalid MIDI note. Use 0..127');
+                    return;
+                }
+                note = Math.round(n);
+            }
+
+            ws.send(JSON.stringify({ type: 'setControlMidiNote', controlType, id, note }));
+            log(`[MAP] ${controlType} ${id} -> ${note === null ? 'default' : note}`);
+        }
+
+        function setupSvgMidiAssignmentClicks() {
+            for (let id = 12; id <= 51; id++) {
+                const el = document.getElementById('svg-btn-' + id);
+                if (!el || el.dataset.mapBound === '1') continue;
+                el.dataset.mapBound = '1';
+                el.addEventListener('click', (ev) => {
+                    ev.stopPropagation();
+                    if (activeEditMode === 'midi') {
+                        assignMidiNoteFromSvg('button', id);
+                        return;
+                    }
+                    if (activeEditMode === 'name') {
+                        const current = buttonNames[id] || defaultButtonNames[id] || '';
+                        const next = promptRenameLabel('button', id, current, defaultButtonNames[id]);
+                        if (next === null) return;
+                        buttonNames[id] = next;
+                        addSvgLabels();
+                    }
+                });
+            }
+
+            for (let id = 0; id < 12; id++) {
+                const el = document.getElementById('svg-rot-' + id);
+                if (!el || el.dataset.mapBound === '1') continue;
+                el.dataset.mapBound = '1';
+                el.addEventListener('click', (ev) => {
+                    ev.stopPropagation();
+                    if (activeEditMode === 'midi') {
+                        assignMidiNoteFromSvg('rotary', id);
+                        return;
+                    }
+                    if (activeEditMode === 'name') {
+                        const current = rotaryNames[id] || defaultRotaryNames[id] || '';
+                        const next = promptRenameLabel('rotary', id, current, defaultRotaryNames[id]);
+                        if (next === null) return;
+                        rotaryNames[id] = next;
+                        addSvgLabels();
+                    }
+                });
+            }
+
+            ['left', 'center', 'right'].forEach((id) => {
+                const wheelEl = document.getElementById('svg-wheel-' + id);
+                if (wheelEl && wheelEl.dataset.mapBound !== '1') {
+                    wheelEl.dataset.mapBound = '1';
+                    wheelEl.addEventListener('click', (ev) => {
+                        ev.stopPropagation();
+                        if (activeEditMode === 'midi') {
+                            const wheelIndex = id === 'left' ? 0 : id === 'center' ? 1 : 2;
+                            assignMidiNoteFromSvg('rotary', wheelIndex);
+                            return;
+                        }
+                        if (activeEditMode === 'name') {
+                            const current = wheelNames[id] || defaultWheelNames[id] || '';
+                            const next = promptRenameLabel('wheel', id, current, defaultWheelNames[id]);
+                            if (next === null) return;
+                            wheelNames[id] = next;
+                            addSvgLabels();
+                        }
+                    });
+                }
+
+                const ballEl = document.getElementById('svg-ball-' + id);
+                if (ballEl && ballEl.dataset.mapBound !== '1') {
+                    ballEl.dataset.mapBound = '1';
+                    ballEl.addEventListener('click', (ev) => {
+                        ev.stopPropagation();
+                        if (activeEditMode === 'midi') {
+                            const ballIndex = id === 'left' ? 0 : id === 'center' ? 1 : 2;
+                            assignMidiNoteFromSvg('rotary', ballIndex);
+                            return;
+                        }
+                        if (activeEditMode === 'name') {
+                            const current = trackballNames[id] || defaultTrackballNames[id] || '';
+                            const next = promptRenameLabel('ball', id, current, defaultTrackballNames[id]);
+                            if (next === null) return;
+                            trackballNames[id] = next;
+                            addSvgLabels();
+                        }
+                    });
+                }
+            });
+
+            refreshSvgAssignmentHints();
+        }
+
+        const wheelSpinState = {
+            left: { angle: 0, cx: 0, cy: 0 },
+            center: { angle: 0, cx: 0, cy: 0 },
+            right: { angle: 0, cx: 0, cy: 0 }
+        };
+
+        const rotarySpinState = Object.fromEntries(
+            Array.from({ length: 12 }, (_, i) => [i, { angle: 0, cx: 0, cy: 0, vel: 0, dir: 0, holdUntil: 0 }])
+        );
+
+        const ballIndicatorState = {
+            left: { x: 0, y: 0, vx: 0, vy: 0, alpha: 0, cx: 0, cy: 0 },
+            center: { x: 0, y: 0, vx: 0, vy: 0, alpha: 0, cx: 0, cy: 0 },
+            right: { x: 0, y: 0, vx: 0, vy: 0, alpha: 0, cx: 0, cy: 0 }
+        };
+
+        const wheelSpinIndicators = {
+            left: null,
+            center: null,
+            right: null
+        };
+
+        const rotarySpinIndicators = Object.fromEntries(
+            Array.from({ length: 12 }, (_, i) => [i, null])
+        );
+
+        const ballIndicators = {
+            left: null,
+            center: null,
+            right: null
+        };
+
+        const defaultBallCalibration = {
+            left: { xSign: 1, ySign: 1, gain: 0.16, dominance: 1.8 },
+            center: { xSign: 1, ySign: 1, gain: 0.16, dominance: 1.8 },
+            right: { xSign: 1, ySign: 1, gain: 0.16, dominance: 1.8 }
+        };
+
+        const ballCalibration = {
+            left: { ...defaultBallCalibration.left },
+            center: { ...defaultBallCalibration.center },
+            right: { ...defaultBallCalibration.right }
+        };
+
+        const calibrationState = {
+            wheel: { active: false, id: 'left', signedSteps: 0, absSteps: 0 },
+            ball: { active: false, id: 'left', direction: '', samples: [] },
+            rotary: { active: false, id: 0, signedUnits: 0, absUnits: 0, samples: 0 }
+        };
+
+        const rotaryUnitsPerDetent = new Array(12).fill(360);
+
+        const defaultWheelDegPerStep = {
+            left: 1.196,
+            center: 1.272,
+            right: 1.494
+        };
+        const wheelDegPerStep = { ...defaultWheelDegPerStep };
+
+        function setupWheelSpinners() {
+            const svg = document.getElementById('panelSvg');
+            if (!svg) return;
+
+            const ns = 'http://www.w3.org/2000/svg';
+            const ids = {
+                left: 'svg-wheel-left',
+                center: 'svg-wheel-center',
+                right: 'svg-wheel-right'
+            };
+            const ballIds = {
+                left: 'svg-ball-left',
+                center: 'svg-ball-center',
+                right: 'svg-ball-right'
+            };
+
+            Object.keys(ids).forEach((id) => {
+                const wheelEl = document.getElementById(ids[id]);
+                if (!wheelEl) return;
+                const ballEl = document.getElementById(ballIds[id]);
+
+                const box = wheelEl.getBBox();
+                const cx = box.x + box.width / 2;
+                const cy = box.y + box.height / 2;
+                wheelSpinState[id].cx = cx;
+                wheelSpinState[id].cy = cy;
+
+                let g = document.getElementById('spin-ind-' + id);
+                const parentGroup = wheelEl.parentNode;
+                if (g && g.parentNode !== parentGroup) {
+                    g.remove();
+                    g = null;
+                }
+                if (!g) {
+                    g = document.createElementNS(ns, 'g');
+                    g.setAttribute('id', 'spin-ind-' + id);
+
+                    const line = document.createElementNS(ns, 'line');
+                    line.setAttribute('x1', String(cx));
+                    line.setAttribute('y1', String(cy));
+                    line.setAttribute('x2', String(cx));
+                    line.setAttribute('y2', String(cy - box.height * 0.5));
+                    line.setAttribute('stroke', '#2f2f2f');
+                    line.setAttribute('stroke-width', '4');
+                    line.setAttribute('stroke-linecap', 'round');
+
+                    g.appendChild(line);
+                    if (ballEl && ballEl.parentNode === parentGroup) {
+                        parentGroup.insertBefore(g, ballEl);
+                    } else {
+                        parentGroup.appendChild(g);
+                    }
+                }
+
+                g.setAttribute('transform', `rotate(${wheelSpinState[id].angle} ${cx} ${cy})`);
+                g.style.opacity = '0';
+                g.style.transition = 'opacity 180ms ease';
+                wheelSpinIndicators[id] = g;
+            });
+        }
+
+        function setupRotarySpinners() {
+            const ns = 'http://www.w3.org/2000/svg';
+
+            for (let i = 0; i < 12; i++) {
+                const rotEl = document.getElementById('svg-rot-' + i);
+                if (!rotEl) continue;
+
+                const box = rotEl.getBBox();
+                const cx = box.x + box.width / 2;
+                const cy = box.y + box.height / 2;
+                rotarySpinState[i].cx = cx;
+                rotarySpinState[i].cy = cy;
+
+                const parentGroup = rotEl.parentNode;
+                let g = document.getElementById('rot-spin-ind-' + i);
+                if (g && g.parentNode !== parentGroup) {
+                    g.remove();
+                    g = null;
+                }
+                if (!g) {
+                    g = document.createElementNS(ns, 'g');
+                    g.setAttribute('id', 'rot-spin-ind-' + i);
+
+                    const line = document.createElementNS(ns, 'line');
+                    line.setAttribute('x1', String(cx));
+                    line.setAttribute('y1', String(cy));
+                    line.setAttribute('x2', String(cx));
+                    line.setAttribute('y2', String(cy - box.height * 0.48));
+                    line.setAttribute('stroke', '#2f2f2f');
+                    line.setAttribute('stroke-width', '1.8');
+                    line.setAttribute('stroke-linecap', 'round');
+
+                    g.appendChild(line);
+                    parentGroup.appendChild(g);
+                }
+
+                g.setAttribute('transform', `rotate(${rotarySpinState[i].angle} ${cx} ${cy})`);
+                g.style.opacity = '0';
+                g.style.transition = 'opacity 180ms ease';
+                rotarySpinIndicators[i] = g;
+            }
+        }
+
+        function setupBallIndicators() {
+            const ns = 'http://www.w3.org/2000/svg';
+            const ballIds = {
+                left: 'svg-ball-left',
+                center: 'svg-ball-center',
+                right: 'svg-ball-right'
+            };
+
+            Object.keys(ballIds).forEach((id) => {
+                const ballEl = document.getElementById(ballIds[id]);
+                if (!ballEl) return;
+
+                const box = ballEl.getBBox();
+                const cx = box.x + box.width / 2;
+                const cy = box.y + box.height / 2;
+                ballIndicatorState[id].cx = cx;
+                ballIndicatorState[id].cy = cy;
+
+                const parentGroup = ballEl.parentNode;
+                let dot = document.getElementById('ball-ind-' + id);
+                if (dot && dot.parentNode !== parentGroup) {
+                    dot.remove();
+                    dot = null;
+                }
+                if (!dot) {
+                    dot = document.createElementNS(ns, 'circle');
+                    dot.setAttribute('id', 'ball-ind-' + id);
+                    dot.setAttribute('cx', String(cx));
+                    dot.setAttribute('cy', String(cy));
+                    dot.setAttribute('r', String(Math.max(3.2, box.width * 0.13)));
+                    dot.setAttribute('fill', '#4fc3f7');
+                    dot.style.opacity = '0';
+                    dot.style.transition = 'opacity 180ms ease';
+                    dot.style.pointerEvents = 'none';
+                    parentGroup.appendChild(dot);
+                }
+                dot.style.pointerEvents = 'none';
+                ballIndicators[id] = dot;
+            });
+        }
+
+        function animateBallIndicator(id, x, y) {
+            const st = ballIndicatorState[id];
+            if (!st) return;
+
+            const cfg = ballCalibration[id] || defaultBallCalibration[id];
+
+            const normX = x / 4096;
+            const normY = y / 4096;
+
+            let adjX = normX * (cfg.xSign || 1);
+            let adjY = normY * (cfg.ySign || 1);
+
+            const ax = Math.abs(adjX);
+            const ay = Math.abs(adjY);
+            const dominant = Math.max(ax, ay);
+            const minor = Math.min(ax, ay);
+            if (dominant > 4 && minor > 0 && dominant / minor > (cfg.dominance || 1.8)) {
+                if (ax > ay) adjY = 0;
+                else adjX = 0;
+            }
+
+            const map = (v) => {
+                const mag = Math.abs(v);
+                if (mag === 0) return 0;
+                const shaped = Math.pow(mag, 0.62);
+                return Math.sign(v) * Math.min(16, shaped);
+            };
+
+            const impulse = (cfg.gain || 0.11) * 0.9;
+            st.vx += -map(adjX) * impulse;
+            st.vy += map(adjY) * impulse;
+            st.alpha = 1;
+        }
+
+        function setCalWheelStatus(text) {
+            const el = document.getElementById('calWheelStatus');
+            if (el) el.textContent = text;
+        }
+
+        function setCalBallStatus(text) {
+            const el = document.getElementById('calBallStatus');
+            if (el) el.textContent = text;
+        }
+
+        function setCalRotaryStatus(text) {
+            const el = document.getElementById('calRotaryStatus');
+            if (el) el.textContent = text;
+        }
+
+        function toggleWheelCalibration() {
+            const btn = document.getElementById('calWheelBtn');
+            if (!calibrationState.wheel.active) {
+                const sel = document.getElementById('calWheelId');
+                calibrationState.wheel.active = true;
+                calibrationState.wheel.id = sel ? sel.value : 'left';
+                calibrationState.wheel.signedSteps = 0;
+                calibrationState.wheel.absSteps = 0;
+                if (btn) btn.textContent = 'Stop';
+                setCalWheelStatus(`Rotate ${calibrationState.wheel.id} wheel exactly 360° then Stop`);
+            } else {
+                calibrationState.wheel.active = false;
+                if (btn) btn.textContent = 'Start';
+
+                const signed = Math.abs(calibrationState.wheel.signedSteps);
+                const abs = calibrationState.wheel.absSteps;
+                const effectiveSteps = signed > 0 ? signed : abs;
+                if (effectiveSteps > 0) {
+                    const deg = 360 / effectiveSteps;
+                    if (Number.isFinite(deg) && deg > 0.05 && deg < 12) {
+                        wheelDegPerStep[calibrationState.wheel.id] = deg;
+                        setCalWheelStatus(`${calibrationState.wheel.id}: ${deg.toFixed(3)} deg/step (${effectiveSteps.toFixed(1)} steps)`);
+                        log(`[CAL] Wheel ${calibrationState.wheel.id} => ${deg.toFixed(3)} deg/step`);
+                    } else {
+                        setCalWheelStatus('Calibration out of range, retry');
+                    }
+                } else {
+                    setCalWheelStatus('No wheel movement captured');
+                }
+            }
+        }
+
+        function handleWheelCalibrationSample(data) {
+            const c = calibrationState.wheel;
+            if (!c.active) return;
+            if (data.id !== c.id) return;
+
+            const signedStep = data.steps !== undefined
+                ? (data.delta !== undefined ? Math.sign(data.delta) * data.steps : Math.sign(data.value || 0) * data.steps)
+                : Math.sign(data.value || 0);
+            const absStep = data.steps !== undefined ? data.steps : Math.abs(data.value || 0);
+
+            c.signedSteps += signedStep;
+            c.absSteps += absStep;
+
+            setCalWheelStatus(`Capturing ${c.id}: net=${c.signedSteps.toFixed(1)} abs=${c.absSteps.toFixed(1)} steps`);
+        }
+
+        function startBallDirectionCalibration(direction) {
+            if (calibrationState.ball.active) {
+                setCalBallStatus('Capture already running');
+                return;
+            }
+            const sel = document.getElementById('calBallId');
+            calibrationState.ball.active = true;
+            calibrationState.ball.id = sel ? sel.value : 'left';
+            calibrationState.ball.direction = direction;
+            calibrationState.ball.samples = [];
+            setCalBallStatus(`Move ${calibrationState.ball.id} ball ${direction.toUpperCase()} now...`);
+
+            clearTimeout(calibrationState.ball._timer);
+            calibrationState.ball._timer = setTimeout(finalizeBallDirectionCalibration, 1400);
+        }
+
+        function handleBallCalibrationSample(id, rawX, rawY) {
+            const c = calibrationState.ball;
+            if (!c.active || c.id !== id) return;
+            c.samples.push({ x: rawX, y: rawY });
+        }
+
+        function finalizeBallDirectionCalibration() {
+            const c = calibrationState.ball;
+            if (!c.active) return;
+            c.active = false;
+
+            if (!c.samples.length) {
+                setCalBallStatus('No movement captured, retry');
+                return;
+            }
+
+            let peakX = 0;
+            let peakY = 0;
+            for (const s of c.samples) {
+                if (Math.abs(s.x) > Math.abs(peakX)) peakX = s.x;
+                if (Math.abs(s.y) > Math.abs(peakY)) peakY = s.y;
+            }
+
+            const cfg = ballCalibration[c.id];
+            if (c.direction === 'right' || c.direction === 'left') {
+                const measuredSign = Math.sign(peakX);
+                const wanted = c.direction === 'right' ? 1 : -1;
+                if (measuredSign !== 0) {
+                    cfg.xSign = wanted / measuredSign;
+                }
+                const bleed = Math.abs(peakY) / Math.max(1, Math.abs(peakX));
+                cfg.dominance = Math.max(1.2, Math.min(4, 1 / Math.max(0.25, bleed)));
+            } else {
+                const measuredSign = Math.sign(peakY);
+                const wanted = c.direction === 'up' ? 1 : -1;
+                if (measuredSign !== 0) {
+                    cfg.ySign = wanted / measuredSign;
+                }
+            }
+
+            setCalBallStatus(`${c.id} ${c.direction.toUpperCase()} captured | peakX=${peakX} peakY=${peakY}`);
+            log(`[CAL] Ball ${c.id} ${c.direction} => xSign=${cfg.xSign} ySign=${cfg.ySign} dominance=${cfg.dominance.toFixed(2)}`);
+        }
+
+        function saveCalibrationToStorage() {
+            localStorage.setItem('wheelDegPerStep', JSON.stringify(wheelDegPerStep));
+            localStorage.setItem('ballCalibration', JSON.stringify(ballCalibration));
+            localStorage.setItem('rotaryUnitsPerDetent', JSON.stringify(rotaryUnitsPerDetent));
+            sendCalibrationToServer();
+            setCalBallStatus('Calibration saved');
+            log('[CAL] Saved calibration to localStorage and server');
+        }
+
+        function sendCalibrationToServer() {
+            if (!wsConnected) return;
+            ws.send(JSON.stringify({
+                type: 'setCalibrationAll',
+                rotaryUnitsPerDetent,
+                wheelDegPerStep,
+                ballCalibration
+            }));
+        }
+
+        function loadCalibrationFromStorage() {
+            try {
+                const wheelRaw = localStorage.getItem('wheelDegPerStep');
+                if (wheelRaw) {
+                    const parsed = JSON.parse(wheelRaw);
+                    ['left', 'center', 'right'].forEach((id) => {
+                        const v = Number(parsed[id]);
+                        if (Number.isFinite(v) && v > 0.05 && v < 12) {
+                            wheelDegPerStep[id] = v;
+                        }
+                    });
+                }
+            } catch(e) {}
+
+            try {
+                const ballRaw = localStorage.getItem('ballCalibration');
+                if (ballRaw) {
+                    const parsed = JSON.parse(ballRaw);
+                    ['left', 'center', 'right'].forEach((id) => {
+                        const cfg = parsed[id] || {};
+                        ballCalibration[id].xSign = cfg.xSign === -1 ? -1 : 1;
+                        ballCalibration[id].ySign = cfg.ySign === -1 ? -1 : 1;
+                        const gain = Number(cfg.gain);
+                        if (Number.isFinite(gain) && gain > 0.01 && gain < 1) {
+                            ballCalibration[id].gain = gain;
+                        }
+                        const dom = Number(cfg.dominance);
+                        if (Number.isFinite(dom) && dom > 1 && dom < 6) {
+                            ballCalibration[id].dominance = dom;
+                        }
+                    });
+                }
+            } catch(e) {}
+
+            try {
+                const rotRaw = localStorage.getItem('rotaryUnitsPerDetent');
+                if (rotRaw) {
+                    const parsed = JSON.parse(rotRaw);
+                    if (Array.isArray(parsed)) {
+                        for (let i = 0; i < 12; i++) {
+                            const v = Number(parsed[i]);
+                            if (Number.isFinite(v) && v >= 1 && v <= 5000) {
+                                rotaryUnitsPerDetent[i] = v;
+                            }
+                        }
+                    }
+                }
+            } catch(e) {}
+        }
+
+        function resetCalibrationDefaults() {
+            ['left', 'center', 'right'].forEach((id) => {
+                wheelDegPerStep[id] = defaultWheelDegPerStep[id];
+                ballCalibration[id] = { ...defaultBallCalibration[id] };
+            });
+            for (let i = 0; i < 12; i++) rotaryUnitsPerDetent[i] = 360;
+            localStorage.removeItem('wheelDegPerStep');
+            localStorage.removeItem('ballCalibration');
+            localStorage.removeItem('rotaryUnitsPerDetent');
+            setCalWheelStatus('Reset to defaults');
+            setCalBallStatus('Reset to defaults');
+            setCalRotaryStatus('Reset rotary defaults');
+            sendCalibrationToServer();
+            log('[CAL] Reset calibration defaults');
+        }
+
+        function toggleRotaryCalibration() {
+            const btn = document.getElementById('calRotaryBtn');
+            if (!calibrationState.rotary.active) {
+                const sel = document.getElementById('calRotaryId');
+                calibrationState.rotary.active = true;
+                calibrationState.rotary.id = Number(sel ? sel.value : 0);
+                calibrationState.rotary.signedUnits = 0;
+                calibrationState.rotary.absUnits = 0;
+                calibrationState.rotary.samples = 0;
+                if (btn) btn.textContent = 'Stop';
+                setCalRotaryStatus(`Rotate knob ${calibrationState.rotary.id + 1} exactly 90° in one direction, then Stop`);
+            } else {
+                calibrationState.rotary.active = false;
+                if (btn) btn.textContent = 'Start';
+                finalizeRotaryCalibration();
+            }
+        }
+
+        function handleRotaryCalibrationSample(data) {
+            const c = calibrationState.rotary;
+            if (!c.active) return;
+            if (Number(data.id) !== c.id) return;
+            const dRaw = Number(data.raw);
+            if (!Number.isFinite(dRaw)) return;
+            if (Math.abs(dRaw) < 40) return;
+            c.signedUnits += dRaw;
+            c.absUnits += Math.abs(dRaw);
+            c.samples += 1;
+
+            setCalRotaryStatus(`Capturing knob ${c.id + 1}: net=${Math.round(c.signedUnits)} abs=${Math.round(c.absUnits)} samples=${c.samples}`);
+        }
+
+        function finalizeRotaryCalibration() {
+            const c = calibrationState.rotary;
+            if (c.samples < 3 || c.absUnits < 200) {
+                setCalRotaryStatus('Not enough movement captured');
+                return;
+            }
+
+            const signed = Math.abs(c.signedUnits);
+            const abs = c.absUnits;
+            const units = signed > 0 ? signed : abs;
+
+            if (!Number.isFinite(units) || units < 1 || units > 200000) {
+                setCalRotaryStatus('Invalid calibration, retry');
+                return;
+            }
+
+            rotaryUnitsPerDetent[c.id] = units;
+            localStorage.setItem('rotaryUnitsPerDetent', JSON.stringify(rotaryUnitsPerDetent));
+            if (wsConnected) {
+                ws.send(JSON.stringify({ type: 'setRotaryCalibration', id: c.id, unitsPerDetent: units }));
+            }
+            setCalRotaryStatus(`Knob ${c.id + 1}: ${units.toFixed(1)} units / 90° (net=${Math.round(c.signedUnits)} abs=${Math.round(c.absUnits)})`);
+            log(`[CAL] Rotary ${c.id + 1} => ${units.toFixed(1)} units / 90° | net=${Math.round(c.signedUnits)} abs=${Math.round(c.absUnits)}`);
+        }
+
+        function applyRotaryOneToAll() {
+            const source = Number(rotaryUnitsPerDetent[0] || 0);
+            if (!Number.isFinite(source) || source <= 0) {
+                setCalRotaryStatus('Knob 1 calibration is invalid');
+                return;
+            }
+
+            for (let i = 0; i < 12; i++) {
+                rotaryUnitsPerDetent[i] = source;
+                if (wsConnected) {
+                    ws.send(JSON.stringify({ type: 'setRotaryCalibration', id: i, unitsPerDetent: source }));
+                }
+            }
+
+            localStorage.setItem('rotaryUnitsPerDetent', JSON.stringify(rotaryUnitsPerDetent));
+            setCalRotaryStatus(`Applied knob 1 (${source.toFixed(1)}) to all knobs`);
+            log(`[CAL] Applied knob 1 value to all knobs: ${source.toFixed(1)} units / 90°`);
+        }
+
+        function animateRotarySpin(id, direction, steps) {
+            const spinEl = rotarySpinIndicators[id];
+            const st = rotarySpinState[id];
+            if (!spinEl || !st) return;
+
+            const now = Date.now();
+            let dir = direction;
+            if (now < st.holdUntil && st.dir !== 0 && dir !== st.dir) {
+                dir = st.dir;
+            }
+
+            const stepMag = Math.max(0.16, Math.min(2.3, steps || 1));
+            const targetVel = dir * (stepMag * 0.46);
+            st.vel = (st.vel * 0.72) + (targetVel * 0.28);
+            st.angle += st.vel;
+
+            if (stepMag > 1.0) {
+                st.dir = dir;
+                st.holdUntil = now + 160;
+            } else {
+                st.dir = dir;
+            }
+
+            spinEl.setAttribute('transform', `rotate(${st.angle} ${st.cx} ${st.cy})`);
+            spinEl.style.opacity = '1';
+            clearTimeout(spinEl._fadeTimeout);
+            spinEl._fadeTimeout = setTimeout(() => {
+                spinEl.style.opacity = '0';
+            }, 140);
+        }
+
+        function tickBallIndicators() {
+            const maxOffset = 9.0;
+            const friction = 0.82;
+            const recenter = 0.11;
+
+            ['left', 'center', 'right'].forEach((id) => {
+                const st = ballIndicatorState[id];
+                const dot = ballIndicators[id];
+                if (!st || !dot) return;
+
+                st.vx *= friction;
+                st.vy *= friction;
+                st.x += st.vx;
+                st.y += st.vy;
+                st.x += (0 - st.x) * recenter;
+                st.y += (0 - st.y) * recenter;
+
+                st.x = Math.max(-maxOffset, Math.min(maxOffset, st.x));
+                st.y = Math.max(-maxOffset, Math.min(maxOffset, st.y));
+
+                if (st.alpha > 0.001) {
+                    st.alpha *= 0.978;
+                } else {
+                    st.alpha = 0;
+                }
+
+                dot.setAttribute('cx', String(st.cx + st.x));
+                dot.setAttribute('cy', String(st.cy + st.y));
+                dot.style.opacity = st.alpha.toFixed(3);
+            });
+
+            requestAnimationFrame(tickBallIndicators);
+        }
+
+        function animateWheelSpin(id, direction, steps) {
+            const svgId = id === 'left' ? 'svg-wheel-left' : id === 'center' ? 'svg-wheel-center' : 'svg-wheel-right';
+            const el = document.getElementById(svgId);
+            if (!el) return;
+
+            const stepMag = Math.max(1, Math.min(10, steps || 1));
+            const degPerStep = wheelDegPerStep[id] || 1.2;
+            const deltaDeg = direction * (stepMag * degPerStep);
+            wheelSpinState[id].angle += deltaDeg;
+
+            const spinEl = wheelSpinIndicators[id];
+            const cx = wheelSpinState[id].cx;
+            const cy = wheelSpinState[id].cy;
+            if (spinEl && cx && cy) {
+                spinEl.setAttribute('transform', `rotate(${wheelSpinState[id].angle} ${cx} ${cy})`);
+                spinEl.style.opacity = '1';
+                clearTimeout(spinEl._fadeTimeout);
+                spinEl._fadeTimeout = setTimeout(() => {
+                    spinEl.style.opacity = '0';
+                }, 140);
+            }
+        }
+
+        // Speed scale state
+        const speedScales = {
+            rotary: new Array(12).fill(1),
+            wheel: { left: 1, center: 1, right: 1 },
+            ball: { left: 1, center: 1, right: 1 }
+        };
+
+        function updateSpeedScale(type, id, value) {
+            const v = parseFloat(value);
+            if (!Number.isFinite(v) || v < 0.1 || v > 5) return;
+            
+            if (type === 'rotary' && id >= 0 && id < 12) {
+                speedScales.rotary[id] = v;
+            } else if (type === 'wheel' && ['left', 'center', 'right'].includes(id)) {
+                speedScales.wheel[id] = v;
+            } else if (type === 'ball' && ['left', 'center', 'right'].includes(id)) {
+                speedScales.ball[id] = v;
+            }
+            
+            // Send to server
+            if (wsConnected) {
+                ws.send(JSON.stringify({ type: 'setSpeedScale', controlType: type, id, value: v }));
+            }
+            
+            localStorage.setItem('speedScales', JSON.stringify(speedScales));
+            log(`[SPEED] ${type} ${id} = ${v.toFixed(1)}x`);
+        }
+
+        function resetAllSpeedScales(which) {
+            if (which === 'all' || which === 'rotary') {
+                for (let i = 0; i < 12; i++) {
+                    speedScales.rotary[i] = 1;
+                    const el = document.getElementById(`rotarySpeed-${i}`);
+                    if (el) el.value = 1;
+                }
+            }
+            if (which === 'all' || which === 'wheel') {
+                ['left', 'center', 'right'].forEach(id => {
+                    speedScales.wheel[id] = 1;
+                    const el = document.getElementById(`wheelSpeed-${id}`);
+                    if (el) el.value = 1;
+                });
+            }
+            if (which === 'all' || which === 'ball') {
+                ['left', 'center', 'right'].forEach(id => {
+                    speedScales.ball[id] = 1;
+                    const el = document.getElementById(`ballSpeed-${id}`);
+                    if (el) el.value = 1;
+                });
+            }
+            
+            if (wsConnected) {
+                ws.send(JSON.stringify({ type: 'setSpeedScale', reset: which }));
+            }
+            localStorage.setItem('speedScales', JSON.stringify(speedScales));
+            log(`[SPEED] Reset ${which} speeds to 1.0x`);
+        }
+
+        function loadSpeedScalesFromStorage() {
+            try {
+                const raw = localStorage.getItem('speedScales');
+                if (!raw) return;
+                const parsed = JSON.parse(raw);
+                
+                if (parsed.rotary && Array.isArray(parsed.rotary)) {
+                    for (let i = 0; i < 12; i++) {
+                        const v = Number(parsed.rotary[i]);
+                        if (Number.isFinite(v) && v >= 0.1 && v <= 5) {
+                            speedScales.rotary[i] = v;
+                            const el = document.getElementById(`rotarySpeed-${i}`);
+                            if (el) el.value = v;
+                        }
+                    }
+                }
+                
+                ['left', 'center', 'right'].forEach(id => {
+                    if (parsed.wheel && parsed.wheel[id] !== undefined) {
+                        const v = Number(parsed.wheel[id]);
+                        if (Number.isFinite(v) && v >= 0.1 && v <= 5) {
+                            speedScales.wheel[id] = v;
+                            const el = document.getElementById(`wheelSpeed-${id}`);
+                            if (el) el.value = v;
+                        }
+                    }
+                    if (parsed.ball && parsed.ball[id] !== undefined) {
+                        const v = Number(parsed.ball[id]);
+                        if (Number.isFinite(v) && v >= 0.1 && v <= 5) {
+                            speedScales.ball[id] = v;
+                            const el = document.getElementById(`ballSpeed-${id}`);
+                            if (el) el.value = v;
+                        }
+                    }
+                });
+            } catch(e) {}
+        }
         
         function log(msg) {
             const logEl = document.getElementById('eventLog');
-            if (logEl) {
-                logEl.innerHTML = msg + '<br>' + logEl.innerHTML;
+            if (logEl) prependLogLine(logEl, msg, 300);
+        }
+
+        function prependLogLine(el, msg, maxLines) {
+            const lines = el.innerHTML.split('<br>').filter(Boolean);
+            lines.unshift(msg);
+            if (lines.length > maxLines) {
+                lines.length = maxLines;
             }
+            el.innerHTML = lines.join('<br>');
         }
 
         function addControl(type, id, x, y, area) {
@@ -660,28 +1858,38 @@
                 let text = '';
                 if (id.startsWith('svg-btn-')) {
                     const btnId = parseInt(id.replace('svg-btn-', ''));
-                    text = buttonNames[btnId] || '';
+                    text = activeEditMode === 'midi'
+                        ? (`N${(getMappedNote('button', btnId) ?? ((btnId - 11) + (getCurrentOctaveValue() * 12)))}`)
+                        : (buttonNames[btnId] || '');
                     label.style.fontSize = '8px';
                     label.style.left = left + 'px';
                     label.style.top = top + 'px';
                     label.style.transform = 'translate(-50%, -50%)';
                 } else if (id.startsWith('svg-rot-')) {
                     const rotId = parseInt(id.replace('svg-rot-', ''));
-                    text = rotaryNames[rotId] || '';
+                    text = activeEditMode === 'midi'
+                        ? (`N${(getMappedNote('rotary', rotId) ?? (60 + rotId))}`)
+                        : (rotaryNames[rotId] || '');
                     label.style.fontSize = '6px';
                     label.style.left = left + 'px';
                     label.style.top = (rect.bottom - wrapperRect.top + 6) + 'px';
                     label.style.transform = 'translate(-50%, 0)';
                 } else if (id.startsWith('svg-ball-')) {
                     const ballId = id.replace('svg-ball-', '');
-                    text = trackballNames[ballId] || ballId.toUpperCase();
+                    const ballIndex = ballId === 'left' ? 0 : ballId === 'center' ? 1 : 2;
+                    text = activeEditMode === 'midi'
+                        ? (`N${(getMappedNote('rotary', ballIndex) ?? (60 + ballIndex))}`)
+                        : (trackballNames[ballId] || ballId.toUpperCase());
                     label.style.fontSize = '14px';
                     label.style.left = left + 'px';
                     label.style.top = (rect.bottom - wrapperRect.top + 10) + 'px';
                     label.style.transform = 'translate(-50%, 0)';
                 } else if (id.startsWith('svg-wheel-')) {
                     const wheelId = id.replace('svg-wheel-', '');
-                    text = wheelId === 'left' ? 'L' : wheelId === 'center' ? 'C' : wheelId === 'right' ? 'R' : wheelId.toUpperCase();
+                    const wheelIndex = wheelId === 'left' ? 0 : wheelId === 'center' ? 1 : 2;
+                    text = activeEditMode === 'midi'
+                        ? (`N${(getMappedNote('rotary', wheelIndex) ?? (60 + wheelIndex))}`)
+                        : (wheelId === 'left' ? 'L' : wheelId === 'center' ? 'C' : wheelId === 'right' ? 'R' : wheelId.toUpperCase());
                     label.style.fontSize = '14px';
                     label.style.left = left + 'px';
                     label.style.top = (rect.bottom - wrapperRect.top + 10) + 'px';
@@ -702,6 +1910,49 @@
                     wrapper.appendChild(label);
                 }
             });
+        }
+
+        function applyRotaryLabelOverrides(overrides) {
+            rotaryNames = { ...defaultRotaryNames };
+            if (!overrides || typeof overrides !== 'object') return;
+            Object.keys(overrides).forEach((k) => {
+                const id = Number(k);
+                if (!Number.isFinite(id) || !(id in defaultRotaryNames)) return;
+                const t = String(overrides[k] || '').trim();
+                if (t.length > 0) {
+                    rotaryNames[id] = t;
+                }
+            });
+        }
+
+        function applyBallLabelOverrides(overrides) {
+            trackballNames = { ...defaultTrackballNames };
+            if (!overrides || typeof overrides !== 'object') return;
+            ['left', 'center', 'right'].forEach((id) => {
+                const t = String(overrides[id] || '').trim();
+                if (t.length > 0) {
+                    trackballNames[id] = t;
+                }
+            });
+        }
+
+        function applyWheelLabelOverrides(overrides) {
+            wheelNames = { ...defaultWheelNames };
+            if (!overrides || typeof overrides !== 'object') return;
+            ['left', 'center', 'right'].forEach((id) => {
+                const t = String(overrides[id] || '').trim();
+                if (t.length > 0) {
+                    wheelNames[id] = t;
+                }
+            });
+        }
+
+        function promptRenameLabel(kind, id, current, fallback) {
+            const entered = prompt(`Rename ${kind} ${id}.\nType /reset to restore default.`, String(current || fallback || ''));
+            if (entered === null) return null;
+            const trimmed = entered.trim();
+            if (trimmed.toLowerCase() === '/reset' || trimmed === '') return fallback;
+            return trimmed;
         }
         
         function renderControls() {
@@ -778,49 +2029,41 @@
                 let text = '';
                 if (id.startsWith('svg-btn-')) {
                     const btnId = parseInt(id.replace('svg-btn-', ''));
-                    text = buttonNames[btnId] || '';
-                    
-                    // Special sizing for SHIFT, FWD, RWD, STOP
-                    if (btnId === 24 || btnId === 25 || btnId === 49 || btnId === 50 || btnId === 51) {
-                        label.style.fontSize = '18px';
-                    } else {
-                        label.style.fontSize = '8px';
-                    }
-                    
-                    // Special positioning for Shift buttons - each in its own SVG
-                    if (btnId === 24) { // SHIFT DOWN
-                        label.style.left = left + 'px';
-                        label.style.top = top + 'px';
-                        label.style.transform = 'translate(-50%, -50%)';
-                    } else if (btnId === 25) { // SHIFT UP
-                        label.style.left = left + 'px';
-                        label.style.top = top + 'px';
-                        label.style.transform = 'translate(-50%, -50%)';
-                    } else {
-                        label.style.left = left + 'px';
-                        label.style.top = top + 'px';
-                        label.style.transform = 'translate(-50%, -50%)';
-                    }
+                    text = activeEditMode === 'midi'
+                        ? (`N${(getMappedNote('button', btnId) ?? ((btnId - 11) + (getCurrentOctaveValue() * 12)))}`)
+                        : (buttonNames[btnId] || '');
+                    label.style.fontSize = '8px';
+                    label.style.left = left + 'px';
+                    label.style.top = top + 'px';
+                    label.style.transform = 'translate(-50%, -50%)';
                 } else if (id.startsWith('svg-rot-')) {
                     const rotId = parseInt(id.replace('svg-rot-', ''));
-                    text = rotaryNames[rotId] || '';
+                    text = activeEditMode === 'midi'
+                        ? (`N${(getMappedNote('rotary', rotId) ?? (60 + rotId))}`)
+                        : (rotaryNames[rotId] || '');
                     label.style.fontSize = '9px';
                     label.style.left = left + 'px';
                     label.style.top = (rect.bottom - wrapperRect.top + 8) + 'px';
                     label.style.transform = 'translate(-50%, 0)';
                 } else if (id.startsWith('svg-ball-')) {
                     const ballId = id.replace('svg-ball-', '');
-                    text = trackballNames[ballId] || ballId.toUpperCase();
+                    const ballIndex = ballId === 'left' ? 0 : ballId === 'center' ? 1 : 2;
+                    text = activeEditMode === 'midi'
+                        ? (`N${(getMappedNote('rotary', ballIndex) ?? (60 + ballIndex))}`)
+                        : (trackballNames[ballId] || ballId.toUpperCase());
                     label.style.fontSize = '14px';
                     label.style.left = left + 'px';
                     label.style.top = top + 'px';
                     label.style.transform = 'translate(-50%, -50%)';
                 } else if (id.startsWith('svg-wheel-')) {
                     const wheelId = id.replace('svg-wheel-', '');
+                    const wheelIndex = wheelId === 'left' ? 0 : wheelId === 'center' ? 1 : 2;
                     const ballPath = svg.querySelector('#svg-ball-' + wheelId);
                     if (ballPath) {
                         const ballRect = ballPath.getBoundingClientRect();
-                        text = wheelId === 'left' ? 'L' : wheelId === 'center' ? 'C' : wheelId === 'right' ? 'R' : wheelId.toUpperCase();
+                        text = activeEditMode === 'midi'
+                            ? (`N${(getMappedNote('rotary', wheelIndex) ?? (60 + wheelIndex))}`)
+                            : (wheelNames[wheelId] || wheelId.toUpperCase());
                         label.style.fontSize = '10px';
                         label.style.left = (ballRect.left - wrapperRect.left + ballRect.width/2) + 'px';
                         label.style.top = (ballRect.bottom - wrapperRect.top + 20) + 'px';
@@ -847,11 +2090,32 @@
         // Run addSvgLabels after a short delay to ensure DOM is ready
         setTimeout(() => {
             try {
+                initLayoutManager();
                 addSvgLabels();
+                setupWheelSpinners();
+                setupRotarySpinners();
+                setupBallIndicators();
+                setupSvgMidiAssignmentClicks();
+                loadSpeedScalesFromStorage();
+                requestAnimationFrame(tickBallIndicators);
             } catch(e) {
                 console.error('addSvgLabels error:', e);
             }
         }, 100);
+
+        window.addEventListener('resize', () => {
+            addSvgLabels();
+            setupWheelSpinners();
+            setupRotarySpinners();
+            setupBallIndicators();
+            setupSvgMidiAssignmentClicks();
+        });
+
+        setTimeout(() => {
+            if (wsConnected) {
+                ws.send(JSON.stringify({ type: 'getCalibrationAll' }));
+            }
+        }, 300);
         
         function loadPresets() {
             ws.send(JSON.stringify({ type: 'getPresets' }));
@@ -871,7 +2135,7 @@
             if (name) window.open('/export/' + name);
         }
         
-        let midiEnabled = true;
+        let midiEnabled = false;
         function toggleMidi() {
             midiEnabled = !midiEnabled;
             const btn = document.getElementById('midiToggle');
@@ -879,35 +2143,239 @@
             btn.className = midiEnabled ? 'primary' : 'danger';
             ws.send(JSON.stringify({ type: 'toggleMidi', enabled: midiEnabled }));
         }
+
+        function setMidiChannel(value) {
+            ws.send(JSON.stringify({ type: 'setMidiChannel', value: Number(value) }));
+        }
+
+        function setEditMode(mode) {
+            activeEditMode = activeEditMode === mode ? 'off' : mode;
+            const nameBtn = document.getElementById('nameEditModeBtn');
+            const midiBtn = document.getElementById('midiEditModeBtn');
+
+            if (nameBtn) nameBtn.className = activeEditMode === 'name' ? 'primary' : '';
+            if (midiBtn) midiBtn.className = activeEditMode === 'midi' ? 'primary' : '';
+
+            addSvgLabels();
+            refreshSvgAssignmentHints();
+        }
+
+        const DEFAULT_LAYOUT_NAME = 'Default Layout';
+
+        function getLayoutStore() {
+            try {
+                const parsed = JSON.parse(localStorage.getItem('panelLayoutStore') || '{}');
+                return {
+                    current: parsed.current || DEFAULT_LAYOUT_NAME,
+                    layouts: parsed.layouts && typeof parsed.layouts === 'object' ? parsed.layouts : {}
+                };
+            } catch (e) {
+                return { current: DEFAULT_LAYOUT_NAME, layouts: {} };
+            }
+        }
+
+        function setLayoutStore(store) {
+            localStorage.setItem('panelLayoutStore', JSON.stringify(store));
+        }
+
+        function captureCurrentLayoutPayload() {
+            return {
+                buttonLabels: getButtonLabelOverrides(),
+                rotaryLabels: getRotaryLabelOverrides(),
+                ballLabels: getBallLabelOverrides(),
+                wheelLabels: getWheelLabelOverrides()
+            };
+        }
+
+        function applyLayoutPayload(payload) {
+            applyButtonLabelOverrides(payload.buttonLabels || {});
+            applyRotaryLabelOverrides(payload.rotaryLabels || {});
+            applyBallLabelOverrides(payload.ballLabels || {});
+            applyWheelLabelOverrides(payload.wheelLabels || {});
+        }
+
+        function renderLayouts(layoutNames, current) {
+            const container = document.getElementById('layoutList');
+            if (!container) return;
+            container.innerHTML = layoutNames.map(name =>
+                '<div class="preset-item">' +
+                '<span>' + name + (name === current ? ' (active)' : '') + '</span>' +
+                '<div style="display:flex;gap:4px;">' +
+                (name !== current ? '<button onclick="loadLayoutPreset(\'' + name + '\')" class="load">✓</button>' : '') +
+                (name !== DEFAULT_LAYOUT_NAME && name !== current ? '<button onclick="deleteLayoutPreset(\'' + name + '\')" class="delete">✕</button>' : '') +
+                '</div></div>'
+            ).join('');
+        }
+
+        function initLayoutManager() {
+            const store = getLayoutStore();
+            loadLayoutPreset(store.current, false);
+            renderLayouts([DEFAULT_LAYOUT_NAME, ...Object.keys(store.layouts)], store.current);
+        }
+
+        function getButtonLabelOverrides() {
+            const overrides = {};
+            Object.keys(defaultButtonNames).forEach((k) => {
+                const id = Number(k);
+                if ((buttonNames[id] || '') !== (defaultButtonNames[id] || '')) {
+                    overrides[id] = buttonNames[id];
+                }
+            });
+            return overrides;
+        }
+
+        function getRotaryLabelOverrides() {
+            const overrides = {};
+            Object.keys(defaultRotaryNames).forEach((k) => {
+                const id = Number(k);
+                if ((rotaryNames[id] || '') !== (defaultRotaryNames[id] || '')) {
+                    overrides[id] = rotaryNames[id];
+                }
+            });
+            return overrides;
+        }
+
+        function getBallLabelOverrides() {
+            const overrides = {};
+            ['left', 'center', 'right'].forEach((id) => {
+                if ((trackballNames[id] || '') !== (defaultTrackballNames[id] || '')) {
+                    overrides[id] = trackballNames[id];
+                }
+            });
+            return overrides;
+        }
+
+        function getWheelLabelOverrides() {
+            const overrides = {};
+            ['left', 'center', 'right'].forEach((id) => {
+                if ((wheelNames[id] || '') !== (defaultWheelNames[id] || '')) {
+                    overrides[id] = wheelNames[id];
+                }
+            });
+            return overrides;
+        }
+
+        function applyButtonLabelOverrides(overrides) {
+            buttonNames = { ...defaultButtonNames };
+            if (!overrides || typeof overrides !== 'object') return;
+            Object.keys(overrides).forEach((k) => {
+                const id = Number(k);
+                if (!Number.isFinite(id) || !(id in defaultButtonNames)) return;
+                const t = String(overrides[k] || '').trim();
+                if (t.length > 0) {
+                    buttonNames[id] = t;
+                }
+            });
+        }
+
+        function saveLayoutManager() {
+            const suggested = 'layout-' + new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-');
+            const name = prompt('Enter layout name:', suggested);
+            if (!name) return;
+            const trimmed = name.trim();
+            if (!trimmed || trimmed === DEFAULT_LAYOUT_NAME) return;
+            const store = getLayoutStore();
+            store.layouts[trimmed] = captureCurrentLayoutPayload();
+            store.current = trimmed;
+            setLayoutStore(store);
+            renderLayouts([DEFAULT_LAYOUT_NAME, ...Object.keys(store.layouts)], store.current);
+            log('[LAYOUT] Saved: ' + trimmed);
+        }
+
+        function loadLayoutPreset(name, rerender = true) {
+            const store = getLayoutStore();
+            if (name === DEFAULT_LAYOUT_NAME) {
+                buttonNames = { ...defaultButtonNames };
+                rotaryNames = { ...defaultRotaryNames };
+                trackballNames = { ...defaultTrackballNames };
+                wheelNames = { ...defaultWheelNames };
+                store.current = DEFAULT_LAYOUT_NAME;
+            } else {
+                const payload = store.layouts[name];
+                if (!payload) return;
+                applyLayoutPayload(payload);
+                store.current = name;
+            }
+            setLayoutStore(store);
+            addSvgLabels();
+            if (rerender) {
+                renderLayouts([DEFAULT_LAYOUT_NAME, ...Object.keys(store.layouts)], store.current);
+            }
+        }
+
+        function deleteLayoutPreset(name) {
+            if (name === DEFAULT_LAYOUT_NAME) return;
+            if (!confirm('Delete layout "' + name + '"?')) return;
+            const store = getLayoutStore();
+            delete store.layouts[name];
+            if (store.current === name) {
+                store.current = DEFAULT_LAYOUT_NAME;
+                buttonNames = { ...defaultButtonNames };
+                rotaryNames = { ...defaultRotaryNames };
+                trackballNames = { ...defaultTrackballNames };
+                wheelNames = { ...defaultWheelNames };
+                addSvgLabels();
+            }
+            setLayoutStore(store);
+            renderLayouts([DEFAULT_LAYOUT_NAME, ...Object.keys(store.layouts)], store.current);
+        }
+
+        function exportLayoutManager() {
+            const store = getLayoutStore();
+            const name = prompt('Enter layout name to export:', store.current || DEFAULT_LAYOUT_NAME);
+            if (!name) return;
+            const payload = name === DEFAULT_LAYOUT_NAME
+                ? captureCurrentLayoutPayload()
+                : store.layouts[name];
+            if (!payload) return;
+            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = name.replace(/\s+/g, '_') + '.json';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        }
+
+        function toggleAppleDlsSynth() {
+            appleDlsSynthEnabled = !appleDlsSynthEnabled;
+            ws.send(JSON.stringify({ type: 'toggleAppleDlsSynth', enabled: appleDlsSynthEnabled }));
+        }
         
         function refreshMidi() {
             ws.send(JSON.stringify({ type: 'refreshMidi' }));
         }
         
-        function updateSetting(name, value) {
-            document.getElementById(name + 'Val').textContent = value;
-            ws.send(JSON.stringify({ type: 'setSetting', name, value: parseInt(value) }));
+        function testMidiMessage() {
+            const typeStr = Math.random() > 0.5 ? 'NOTE' : 'CC';
+            const ch = Math.floor(Math.random() * 16) + 1;
+            const note = Math.floor(Math.random() * 128);
+            const vel = Math.floor(Math.random() * 128);
+            const msg = `${typeStr} Ch${ch} Note:${note} Vel:${vel}`;
+            const midiLog = document.getElementById('midiLog');
+            if (midiLog) {
+                midiLog.innerHTML = msg + '<br>' + midiLog.innerHTML;
+            }
         }
         
-        // Handle preset messages
-        const originalOnmessage = ws.onmessage;
-        ws.onmessage = function(event) {
-            const data = JSON.parse(event.data);
-            if (data.type === 'presets') {
-                renderPresets(data.presets, data.current);
-            } else if (data.type === 'presetSaved') {
-                loadPresets();
-            } else if (data.type === 'presetLoaded') {
+        // Handle preset messages - merge with main handler instead of wrapping
+        const presetHandlers = {
+            presets: (data) => renderPresets(data.presets, data.current),
+            presetSaved: () => loadPresets(),
+            presetLoaded: (data) => {
                 document.getElementById('octaveDisplay').textContent = data.octave;
                 loadPresets();
-            } else if (data.type === 'midiToggled') {
+            },
+            midiToggled: (data) => {
                 midiEnabled = data.enabled;
                 const btn = document.getElementById('midiToggle');
                 btn.textContent = midiEnabled ? 'MIDI ON' : 'MIDI OFF';
                 btn.className = midiEnabled ? 'primary' : 'danger';
             }
-            originalOnmessage.call(this, event);
         };
+
+        // Store reference for preset handlers to use
+        window.presetHandlers = presetHandlers;
         
 function renderPresets(presetsList, current) {
             const container = document.getElementById('presetList');
@@ -915,9 +2383,9 @@ function renderPresets(presetsList, current) {
             container.innerHTML = presetsList.map(p => 
                 '<div class="preset-item">' +
                 '<span>' + p + (p === current ? ' (active)' : '') + '</span>' +
-                '<div>' +
-                (p !== current ? '<button onclick="loadPreset(\'' + p + '\')">✓</button>' : '') +
-                (p !== 'default' && p !== current ? '<button onclick="deletePreset(\'' + p + '\')" style="margin-left:4px;color:#c62828;">✕</button>' : '') +
+                '<div style="display:flex;gap:4px;">' +
+                (p !== current ? '<button onclick="loadPreset(\'' + p + '\')" class="load">✓</button>' : '') +
+                (p !== 'default' && p !== current ? '<button onclick="deletePreset(\'' + p + '\')" class="delete">✕</button>' : '') +
                 '</div></div>'
             ).join('');
         }

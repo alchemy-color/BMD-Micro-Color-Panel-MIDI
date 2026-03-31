@@ -1,0 +1,58 @@
+{
+  "rotaryUnitsPerDetent": [
+    360,
+    360,
+    360,
+    360,
+    360,
+    360,
+    360,
+    360,
+    360,
+    360,
+    360,
+    360
+  ],
+  "wheelDegPerStep": {
+    "left": 1.196,
+    "center": 1.272,
+    "right": 1.494
+  },
+  "ballCalibration": {
+    "left": {
+      "xSign": 1,
+      "ySign": 1,
+      "gain": 0.16,
+      "dominance": 1.8
+    },
+    "center": {
+      "xSign": 1,
+      "ySign": 1,
+      "gain": 0.16,
+      "dominance": 1.8
+    },
+    "right": {
+      "xSign": 1,
+      "ySign": 1,
+      "gain": 0.16,
+      "dominance": 1.8
+    }
+  },
+  "controlMidiNotes": {
+    "button": {},
+    "rotary": [
+      60,
+      61,
+      62,
+      63,
+      64,
+      65,
+      66,
+      67,
+      68,
+      69,
+      70,
+      71
+    ]
+  }
+}

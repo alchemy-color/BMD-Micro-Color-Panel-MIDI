@@ -2,17 +2,20 @@
 
 ![Screenshot](screenshot.png)
 
-A web-based GUI editor with MIDI output for the BlackMagic DaVinci Resolve Micro Color Panel.
+Turn your Blackmagic DaVinci Resolve Micro Color Panel into a fully customizable MIDI controller. Web-based GUI with per-control speed scaling, MIDI mapping, and preset management.
 
 > **Inspiration**: This project is a derivative of [micro-color-panel-controller](https://github.com/ra100/micro-color-panel-controller) by [ra100](https://github.com/ra100). That project provided the foundation for reverse-engineering the panel's HID protocol.
 
 ## Features
 
 - **USB HID Control** - Connects directly to BMD Micro Color Panel (USB PID 0xda0f)
-- **Web GUI** - Visual panel representation at http://localhost:8766
+- **Web GUI** - Visual panel representation at http://localhost:8766 with real-time feedback
 - **MIDI Output** - Send notes/CC to DAWs like Logic Pro or Lightroom via MIDI2LR
+- **Speed Scale Controls** - Individual 0.1x-5x sensitivity sliders for all 12 rotaries, 3 jog wheels, and 3 trackballs
+- **MIDI Mapping** - Click any control in MIDI Map mode to assign custom MIDI notes
+- **Label Presets** - Save and switch between custom button/rotary/wheel/ball label layouts
 - **Preset System** - Save/load/export custom MIDI mappings
-- **Real-time Updates** - Adjust sensitivity (step/throttle) via UI sliders
+- **Real-time Calibration** - Adjust rotary units per detent, wheel degrees per step, and trackball sensitivity
 
 ## Requirements
 
@@ -80,12 +83,12 @@ Import `MicroPanel_LR.xml` into MIDI2LR:
 
 ## Settings
 
-Adjust sensitivity in the Settings panel:
+Adjust sensitivity and mapping in the UI panels:
 
-- **Rotary Step** - How fast values change (1-10)
-- **Rotary Throttle** - Delay between updates (0-50ms)
-- **Ball Step/Throttle** - Trackball sensitivity
-- **Wheel Step/Throttle** - Jog wheel sensitivity
+- **Speed Scales** - Per-control sensitivity (0.1x to 5x) for rotary encoders, jog wheels, and trackballs
+- **Calibration** - Fine-tune rotary units per detent, wheel degrees per step, and trackball gain/dominance
+- **MIDI Map** - Click any control to assign custom MIDI notes
+- **Label Presets** - Rename and save custom label layouts for buttons and controls
 
 ## Troubleshooting
 
@@ -113,11 +116,6 @@ Adjust sensitivity in the Settings panel:
 
 ### Wheels
 - **Direction detection incomplete** - The wheel delta detection works but only registers -1 regardless of turn direction. The raw values show alternating patterns that haven't been fully resolved into reliable left/right differentiation.
-- **Speed affects frequency, not value** - Moving the wheel faster generates more events but the step value remains constant. True velocity-sensitive output would require additional processing.
-
-### Rotary Encoders
-- **No response in some sessions** - Rotaries may not register MIDI output in certain conditions. The raw encoder data (4096 per detent) is correctly parsed but may need additional debugging.
-- **Noise at rest** - Minor jitter in encoder values may occur at extremes (0 or 127).
 
 ### General
 - **No MIDI input** - The panel only sends HID data; it cannot receive MIDI back. Values are accumulated client-side only.
