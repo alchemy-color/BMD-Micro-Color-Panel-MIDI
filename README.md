@@ -1,6 +1,6 @@
 # BMD Micro Color Panel MIDI Controller
 
-![Screenshot](screenshot.png)
+![alt text](<Screenshot 2026-04-01 at 01.09.34.png>)
 
 Turn your Blackmagic DaVinci Resolve Micro Color Panel into a fully customizable MIDI controller. Web-based GUI with per-control speed scaling, MIDI mapping, and preset management.
 
