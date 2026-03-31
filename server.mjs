@@ -440,57 +440,59 @@ function parseTrackballReport(data) {
 const UNITS_PER_DETENT = 360;
 
 let rotaryLastRaw = new Array(12).fill(0);
-let rotaryPosition = new Array(12).fill(0);
+let rotaryPosition = new Array(12).fill(0); // Synthetic position
 
-// Parse encoder report (ID 06) - CORRECTED VERSION
+// Parse encoder report (ID 06) - TREAT RAW AS VELOCITY
 function parseEncoderReport(data) {
     for (let i = 0; i < 12; i++) {
-        const offset = 1 + i * 2; // Each encoder is 2 bytes (int16)
+        const offset = 1 + i * 4;
         if (offset + 1 >= data.length) break;
         
-        // Read signed 16-bit value
-        let raw = data.readInt16LE(offset);
+        // Read raw velocity value
+        const raw = data.readUInt16LE(offset);
         
-        // Skip if no change
+        // Skip if same as last (no movement)
         if (raw === rotaryLastRaw[i]) continue;
         
-        // Calculate delta (change since last reading)
-        const delta = raw - rotaryLastRaw[i];
+        // Calculate velocity (delta from zero center)
+        // Values > 32768 are negative (two's complement)
+        let velocity = raw;
+        if (velocity > 32768) velocity -= 65536;
         
-        // Apply speed scale
-        const scaledDelta = delta * speedScales.rotary[i];
+        // Apply speed scale to velocity
+        velocity = velocity * speedScales.rotary[i];
         
-        // Accumulate position
-        rotaryPosition[i] += scaledDelta;
+        // Skip tiny noise
+        if (Math.abs(velocity) < 90) continue;
         
-        // Calculate detents (360 units = 1 detent)
-        const detents = Math.trunc(rotaryPosition[i] / UNITS_PER_DETENT);
+        // Accumulate to synthetic position
+        rotaryPosition[i] += velocity;
+        
+        // Calculate detents from position
+        const detents = Math.trunc(rotaryPosition[i] / 360);
         
         if (detents !== 0) {
-            // Consume detents from position
-            rotaryPosition[i] -= detents * UNITS_PER_DETENT;
+            // Consume detents
+            rotaryPosition[i] -= detents * 360;
             
-            // Update MIDI value
-            rotaryValues[i] = Math.max(0, Math.min(127, rotaryValues[i] + (detents * ROTARY_STEP)));
+            // Send MIDI with speed scale applied
+            const scaledStep = ROTARY_STEP * speedScales.rotary[i];
+            rotaryValues[i] = Math.max(0, Math.min(127, rotaryValues[i] + (detents * scaledStep)));
             const note = Number.isFinite(controlMidiNotes.rotary[i]) ? controlMidiNotes.rotary[i] : (60 + i);
-            
-            // Send MIDI
             sendMidi('note', 0, note, rotaryValues[i]);
             
-            logToFile(`[ROTARY] id=${i} delta=${delta} detents=${detents} value=${rotaryValues[i]}`);
+            logToFile(`[ROTARY] id=${i} vel=${velocity} pos=${rotaryPosition[i]} detents=${detents}`);
         }
         
-        // Save last raw
         rotaryLastRaw[i] = raw;
         
-        // Broadcast to UI
+        // Broadcast to UI - send velocity as delta for UI compatibility
         broadcast({ 
             type: 'encoder', 
             id: i, 
-            delta: scaledDelta,
+            delta: velocity,
             detents: detents || 0,
-            value: rotaryValues[i],
-            raw: raw
+            value: rotaryValues[i]
         });
     }
 }
