@@ -300,7 +300,7 @@
                 </div>
                 <div id="calWheelStatus" style="font-size:10px;color:#888;margin-bottom:10px;">Idle</div>
 
-                <div class="section-subtitle">Rotary</div>
+                <div class="section-subtitle">Rotary Visual Calibration</div>
                 <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
                     <select id="calRotaryId" style="flex:1;padding:5px;background:#333;border:1px solid #555;color:#fff;border-radius:4px;">
                         <option value="0">1</option><option value="1">2</option><option value="2">3</option><option value="3">4</option>
@@ -309,10 +309,7 @@
                     </select>
                     <button id="calRotaryBtn" onclick="toggleRotaryCalibration()" style="padding:4px 10px;">Start</button>
                 </div>
-                <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
-                    <button onclick="applyRotaryOneToAll()" style="padding:4px 10px;width:100%;">Apply Knob 1 to All Knobs</button>
-                </div>
-                <div id="calRotaryStatus" style="font-size:10px;color:#888;margin-bottom:10px;">Rotate exactly 90° and stop</div>
+                <div id="calRotaryStatus" style="font-size:10px;color:#888;margin-bottom:10px;">Rotate exactly 180° then Stop</div>
 
                 <div class="section-subtitle">Ball Direction</div>
                 <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
@@ -336,88 +333,6 @@
                 </div>
             </div>
 
-            <div class="panel-section">
-                <h3 onclick="togglePanel(this)">Speed Scales</h3>
-                <div class="panel-content">
-                
-                <div class="section-subtitle">Rotary Encoders (0.1x - 5x)</div>
-                <div id="rotarySpeedControls" style="margin-bottom:10px;">
-                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:6px;">
-                        <div style="text-align:center;font-size:9px;">1</div>
-                        <div style="text-align:center;font-size:9px;">2</div>
-                        <div style="text-align:center;font-size:9px;">3</div>
-                    </div>
-                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:6px;">
-                        <input type="range" id="rotarySpeed-0" min="0.1" max="5" step="0.1" value="1" onchange="updateSpeedScale('rotary', 0, this.value)" style="width:100%;">
-                        <input type="range" id="rotarySpeed-1" min="0.1" max="5" step="0.1" value="1" onchange="updateSpeedScale('rotary', 1, this.value)" style="width:100%;">
-                        <input type="range" id="rotarySpeed-2" min="0.1" max="5" step="0.1" value="1" onchange="updateSpeedScale('rotary', 2, this.value)" style="width:100%;">
-                    </div>
-                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:6px;">
-                        <div style="text-align:center;font-size:9px;">4</div>
-                        <div style="text-align:center;font-size:9px;">5</div>
-                        <div style="text-align:center;font-size:9px;">6</div>
-                    </div>
-                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:6px;">
-                        <input type="range" id="rotarySpeed-3" min="0.1" max="5" step="0.1" value="1" onchange="updateSpeedScale('rotary', 3, this.value)" style="width:100%;">
-                        <input type="range" id="rotarySpeed-4" min="0.1" max="5" step="0.1" value="1" onchange="updateSpeedScale('rotary', 4, this.value)" style="width:100%;">
-                        <input type="range" id="rotarySpeed-5" min="0.1" max="5" step="0.1" value="1" onchange="updateSpeedScale('rotary', 5, this.value)" style="width:100%;">
-                    </div>
-                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:6px;">
-                        <div style="text-align:center;font-size:9px;">7</div>
-                        <div style="text-align:center;font-size:9px;">8</div>
-                        <div style="text-align:center;font-size:9px;">9</div>
-                    </div>
-                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:6px;">
-                        <input type="range" id="rotarySpeed-6" min="0.1" max="5" step="0.1" value="1" onchange="updateSpeedScale('rotary', 6, this.value)" style="width:100%;">
-                        <input type="range" id="rotarySpeed-7" min="0.1" max="5" step="0.1" value="1" onchange="updateSpeedScale('rotary', 7, this.value)" style="width:100%;">
-                        <input type="range" id="rotarySpeed-8" min="0.1" max="5" step="0.1" value="1" onchange="updateSpeedScale('rotary', 8, this.value)" style="width:100%;">
-                    </div>
-                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:6px;">
-                        <div style="text-align:center;font-size:9px;">10</div>
-                        <div style="text-align:center;font-size:9px;">11</div>
-                        <div style="text-align:center;font-size:9px;">12</div>
-                    </div>
-                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;">
-                        <input type="range" id="rotarySpeed-9" min="0.1" max="5" step="0.1" value="1" onchange="updateSpeedScale('rotary', 9, this.value)" style="width:100%;">
-                        <input type="range" id="rotarySpeed-10" min="0.1" max="5" step="0.1" value="1" onchange="updateSpeedScale('rotary', 10, this.value)" style="width:100%;">
-                        <input type="range" id="rotarySpeed-11" min="0.1" max="5" step="0.1" value="1" onchange="updateSpeedScale('rotary', 11, this.value)" style="width:100%;">
-                    </div>
-                </div>
-                <button onclick="resetAllSpeedScales('rotary')" style="padding:4px 10px;width:100%;margin-bottom:12px;">Reset All Rotary</button>
-
-                <div class="section-subtitle">Jog Wheels</div>
-                <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
-                    <span style="font-size:10px;width:40px;">Left</span>
-                    <input type="range" id="wheelSpeed-left" min="0.1" max="5" step="0.1" value="1" onchange="updateSpeedScale('wheel', 'left', this.value)" style="flex:1;">
-                </div>
-                <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
-                    <span style="font-size:10px;width:40px;">Center</span>
-                    <input type="range" id="wheelSpeed-center" min="0.1" max="5" step="0.1" value="1" onchange="updateSpeedScale('wheel', 'center', this.value)" style="flex:1;">
-                </div>
-                <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
-                    <span style="font-size:10px;width:40px;">Right</span>
-                    <input type="range" id="wheelSpeed-right" min="0.1" max="5" step="0.1" value="1" onchange="updateSpeedScale('wheel', 'right', this.value)" style="flex:1;">
-                </div>
-                <button onclick="resetAllSpeedScales('wheel')" style="padding:4px 10px;width:100%;margin-bottom:12px;">Reset All Wheels</button>
-
-                <div class="section-subtitle">Trackballs</div>
-                <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
-                    <span style="font-size:10px;width:40px;">Left</span>
-                    <input type="range" id="ballSpeed-left" min="0.1" max="5" step="0.1" value="1" onchange="updateSpeedScale('ball', 'left', this.value)" style="flex:1;">
-                </div>
-                <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
-                    <span style="font-size:10px;width:40px;">Center</span>
-                    <input type="range" id="ballSpeed-center" min="0.1" max="5" step="0.1" value="1" onchange="updateSpeedScale('ball', 'center', this.value)" style="flex:1;">
-                </div>
-                <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px;">
-                    <span style="font-size:10px;width:40px;">Right</span>
-                    <input type="range" id="ballSpeed-right" min="0.1" max="5" step="0.1" value="1" onchange="updateSpeedScale('ball', 'right', this.value)" style="flex:1;">
-                </div>
-                <button onclick="resetAllSpeedScales('ball')" style="padding:4px 10px;width:100%;margin-bottom:12px;">Reset All Balls</button>
-
-                <button onclick="resetAllSpeedScales('all')" class="primary" style="padding:6px 10px;width:100%;">Reset All Speeds</button>
-                </div>
-            </div>
 
             <div class="panel-section">
                 <h3 onclick="togglePanel(this)">Event Log</h3>
@@ -728,13 +643,8 @@
             else if (data.type === 'encoder' || data.type === 'rotary') {
                 handleRotaryCalibrationSample(data);
                 const deltaRaw = Number(data.delta || 0);
-                console.log('[ROTARY-UI] received id=' + data.id + ' delta=' + deltaRaw);
-                if (Math.abs(deltaRaw) >= 80) {
-                    const direction = deltaRaw > 0 ? 1 : -1;
-                    const normalized = Math.abs(deltaRaw) / 3200;
-                    const speed = Math.max(0.16, Math.min(2.3, 0.16 + Math.pow(normalized, 0.52) * 1.9));
-                    console.log('[ROTARY-UI] animating id=' + data.id + ' dir=' + direction + ' speed=' + speed);
-                    animateRotarySpin(data.id, direction, speed);
+                if (deltaRaw !== 0) {
+                    animateRotarySpin(data.id, deltaRaw * rotaryDegreesPerUnit);
                 }
                 // Show RAW values for debugging
                 const rawInfo = data.raw !== undefined ? ` raw=${data.raw} last=${data.lastRaw} Δ=${data.delta} det=${data.detents}` : '';
@@ -1608,89 +1518,55 @@
             const c = calibrationState.rotary;
             if (!c.active) return;
             if (Number(data.id) !== c.id) return;
-            const dRaw = Number(data.raw);
-            if (!Number.isFinite(dRaw)) return;
-            if (Math.abs(dRaw) < 40) return;
+            const dRaw = Number(data.delta);
+            if (!Number.isFinite(dRaw) || Math.abs(dRaw) < 90) return;
             c.signedUnits += dRaw;
             c.absUnits += Math.abs(dRaw);
             c.samples += 1;
-
-            setCalRotaryStatus(`Capturing knob ${c.id + 1}: net=${Math.round(c.signedUnits)} abs=${Math.round(c.absUnits)} samples=${c.samples}`);
+            setCalRotaryStatus(`Capturing knob ${c.id + 1}: ${Math.round(c.absUnits)} units — keep turning…`);
         }
 
         function finalizeRotaryCalibration() {
             const c = calibrationState.rotary;
             if (c.samples < 3 || c.absUnits < 200) {
-                setCalRotaryStatus('Not enough movement captured');
+                setCalRotaryStatus('Not enough movement — try again');
                 return;
             }
 
-            const signed = Math.abs(c.signedUnits);
-            const abs = c.absUnits;
-            const units = signed > 0 ? signed : abs;
-
-            if (!Number.isFinite(units) || units < 1 || units > 200000) {
+            const totalUnits = c.absUnits;
+            if (!Number.isFinite(totalUnits) || totalUnits < 1) {
                 setCalRotaryStatus('Invalid calibration, retry');
                 return;
             }
 
-            rotaryUnitsPerDetent[c.id] = units;
-            localStorage.setItem('rotaryUnitsPerDetent', JSON.stringify(rotaryUnitsPerDetent));
-            if (wsConnected) {
-                ws.send(JSON.stringify({ type: 'setRotaryCalibration', id: c.id, unitsPerDetent: units }));
-            }
-            setCalRotaryStatus(`Knob ${c.id + 1}: ${units.toFixed(1)} units / 90° (net=${Math.round(c.signedUnits)} abs=${Math.round(c.absUnits)})`);
-            log(`[CAL] Rotary ${c.id + 1} => ${units.toFixed(1)} units / 90° | net=${Math.round(c.signedUnits)} abs=${Math.round(c.absUnits)}`);
+            // 180° physical turn = totalUnits raw velocity units → degrees per unit
+            rotaryDegreesPerUnit = 180 / totalUnits;
+            localStorage.setItem('rotaryDegreesPerUnit', rotaryDegreesPerUnit.toString());
+
+            setCalRotaryStatus(`Calibrated: ${Math.round(totalUnits)} units = 180° (${rotaryDegreesPerUnit.toFixed(6)} °/unit)`);
+            log(`[CAL] Rotation knob ${c.id + 1}: ${Math.round(totalUnits)} units → 180° | scale=${rotaryDegreesPerUnit.toFixed(6)}`);
         }
 
-        function applyRotaryOneToAll() {
-            const source = Number(rotaryUnitsPerDetent[0] || 0);
-            if (!Number.isFinite(source) || source <= 0) {
-                setCalRotaryStatus('Knob 1 calibration is invalid');
-                return;
-            }
+        // Degrees of visual rotation per raw velocity unit.
+        // Set by the 180° rotation calibration; persisted in localStorage.
+        // Discard stale defaults from earlier sessions (0.003 = 8×, 0.000375 = 1.5×)
+        const _savedDpu = parseFloat(localStorage.getItem('rotaryDegreesPerUnit'));
+        if (_savedDpu === 0.003 || _savedDpu === 0.000375) localStorage.removeItem('rotaryDegreesPerUnit');
+        let rotaryDegreesPerUnit = parseFloat(localStorage.getItem('rotaryDegreesPerUnit')) || 0.00025;
 
-            for (let i = 0; i < 12; i++) {
-                rotaryUnitsPerDetent[i] = source;
-                if (wsConnected) {
-                    ws.send(JSON.stringify({ type: 'setRotaryCalibration', id: i, unitsPerDetent: source }));
-                }
-            }
-
-            localStorage.setItem('rotaryUnitsPerDetent', JSON.stringify(rotaryUnitsPerDetent));
-            setCalRotaryStatus(`Applied knob 1 (${source.toFixed(1)}) to all knobs`);
-            log(`[CAL] Applied knob 1 value to all knobs: ${source.toFixed(1)} units / 90°`);
-        }
-
-        function animateRotarySpin(id, direction, steps) {
+        // Direct 1:1 physical rotation animation — no velocity smoothing.
+        function animateRotarySpin(id, angleDelta) {
             const spinEl = rotarySpinIndicators[id];
             const st = rotarySpinState[id];
             if (!spinEl || !st) return;
 
-            const now = Date.now();
-            let dir = direction;
-            if (now < st.holdUntil && st.dir !== 0 && dir !== st.dir) {
-                dir = st.dir;
-            }
-
-            const stepMag = Math.max(0.16, Math.min(2.3, steps || 1));
-            const targetVel = dir * (stepMag * 0.46);
-            st.vel = (st.vel * 0.72) + (targetVel * 0.28);
-            st.angle += st.vel;
-
-            if (stepMag > 1.0) {
-                st.dir = dir;
-                st.holdUntil = now + 160;
-            } else {
-                st.dir = dir;
-            }
-
+            st.angle += angleDelta;
             spinEl.setAttribute('transform', `rotate(${st.angle} ${st.cx} ${st.cy})`);
             spinEl.style.opacity = '1';
             clearTimeout(spinEl._fadeTimeout);
             spinEl._fadeTimeout = setTimeout(() => {
                 spinEl.style.opacity = '0';
-            }, 140);
+            }, 200);
         }
 
         function tickBallIndicators() {
@@ -1750,101 +1626,6 @@
             }
         }
 
-        // Speed scale state
-        const speedScales = {
-            rotary: new Array(12).fill(1),
-            wheel: { left: 1, center: 1, right: 1 },
-            ball: { left: 1, center: 1, right: 1 }
-        };
-
-        function updateSpeedScale(type, id, value) {
-            const v = parseFloat(value);
-            if (!Number.isFinite(v) || v < 0.1 || v > 5) return;
-            
-            if (type === 'rotary' && id >= 0 && id < 12) {
-                speedScales.rotary[id] = v;
-            } else if (type === 'wheel' && ['left', 'center', 'right'].includes(id)) {
-                speedScales.wheel[id] = v;
-            } else if (type === 'ball' && ['left', 'center', 'right'].includes(id)) {
-                speedScales.ball[id] = v;
-            }
-            
-            // Send to server
-            if (wsConnected) {
-                ws.send(JSON.stringify({ type: 'setSpeedScale', controlType: type, id, value: v }));
-            }
-            
-            localStorage.setItem('speedScales', JSON.stringify(speedScales));
-            log(`[SPEED] ${type} ${id} = ${v.toFixed(1)}x`);
-        }
-
-        function resetAllSpeedScales(which) {
-            if (which === 'all' || which === 'rotary') {
-                for (let i = 0; i < 12; i++) {
-                    speedScales.rotary[i] = 1;
-                    const el = document.getElementById(`rotarySpeed-${i}`);
-                    if (el) el.value = 1;
-                }
-            }
-            if (which === 'all' || which === 'wheel') {
-                ['left', 'center', 'right'].forEach(id => {
-                    speedScales.wheel[id] = 1;
-                    const el = document.getElementById(`wheelSpeed-${id}`);
-                    if (el) el.value = 1;
-                });
-            }
-            if (which === 'all' || which === 'ball') {
-                ['left', 'center', 'right'].forEach(id => {
-                    speedScales.ball[id] = 1;
-                    const el = document.getElementById(`ballSpeed-${id}`);
-                    if (el) el.value = 1;
-                });
-            }
-            
-            if (wsConnected) {
-                ws.send(JSON.stringify({ type: 'setSpeedScale', reset: which }));
-            }
-            localStorage.setItem('speedScales', JSON.stringify(speedScales));
-            log(`[SPEED] Reset ${which} speeds to 1.0x`);
-        }
-
-        function loadSpeedScalesFromStorage() {
-            try {
-                const raw = localStorage.getItem('speedScales');
-                if (!raw) return;
-                const parsed = JSON.parse(raw);
-                
-                if (parsed.rotary && Array.isArray(parsed.rotary)) {
-                    for (let i = 0; i < 12; i++) {
-                        const v = Number(parsed.rotary[i]);
-                        if (Number.isFinite(v) && v >= 0.1 && v <= 5) {
-                            speedScales.rotary[i] = v;
-                            const el = document.getElementById(`rotarySpeed-${i}`);
-                            if (el) el.value = v;
-                        }
-                    }
-                }
-                
-                ['left', 'center', 'right'].forEach(id => {
-                    if (parsed.wheel && parsed.wheel[id] !== undefined) {
-                        const v = Number(parsed.wheel[id]);
-                        if (Number.isFinite(v) && v >= 0.1 && v <= 5) {
-                            speedScales.wheel[id] = v;
-                            const el = document.getElementById(`wheelSpeed-${id}`);
-                            if (el) el.value = v;
-                        }
-                    }
-                    if (parsed.ball && parsed.ball[id] !== undefined) {
-                        const v = Number(parsed.ball[id]);
-                        if (Number.isFinite(v) && v >= 0.1 && v <= 5) {
-                            speedScales.ball[id] = v;
-                            const el = document.getElementById(`ballSpeed-${id}`);
-                            if (el) el.value = v;
-                        }
-                    }
-                });
-            } catch(e) {}
-        }
         
         function log(msg) {
             const logEl = document.getElementById('eventLog');
@@ -2153,7 +1934,6 @@
                 setupRotarySpinners();
                 setupBallIndicators();
                 setupSvgMidiAssignmentClicks();
-                loadSpeedScalesFromStorage();
                 requestAnimationFrame(tickBallIndicators);
             } catch(e) {
                 console.error('addSvgLabels error:', e);

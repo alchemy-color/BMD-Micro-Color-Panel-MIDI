@@ -22,11 +22,20 @@ console.log('💡 Run with sudo: sudo node server.mjs');
 
 // MIDI Setup - import dynamically
 let midiOut = null;
-let rotaryValues = new Array(12).fill(0);
 let rotaryLastTime = new Array(12).fill(0);
 let rotaryUnitsPerDetent = new Array(12).fill(360);
 let ROTARY_THROTTLE_MS = 0;
-let ROTARY_STEP = 2;
+
+// Rotary velocity calibration bounds — must be declared here so loadCalibration()
+// (called early) can update them before parseEncoderReport uses them.
+let rotaryVelMin = 1080;  // absolute velocity at the slowest detectable turn
+let rotaryVelMax = 32767; // absolute velocity at the fastest turn
+let _rlogK, _rlogB;
+function recomputeRotaryLogScale() {
+    _rlogK = 126 / Math.log(rotaryVelMax / rotaryVelMin);
+    _rlogB = 1 - _rlogK * Math.log(rotaryVelMin);
+}
+recomputeRotaryLogScale();
 let BALL_STEP = 0;
 let BALL_THROTTLE_MS = 0;
 let WHEEL_STEP = 0;
@@ -42,12 +51,6 @@ let wheelMotionState = {
 };
 let rotaryMotionState = Array.from({ length: 12 }, () => ({ dir: 0, ts: 0, mag: 0, holdUntil: 0, bias: 0 }));
 
-// Speed scale multipliers (0.1x to 5x)
-const speedScales = {
-    rotary: new Array(12).fill(1),
-    wheel: { left: 1, center: 1, right: 1 },
-    ball: { left: 1, center: 1, right: 1 }
-};
 let midiPorts = [];
 let midiOctave = 0;
 let midiEnabled = true;
@@ -89,7 +92,8 @@ const defaultBallCalibration = {
 };
 const defaultControlMidiNotes = {
     button: {},
-    rotary: Array.from({ length: 12 }, (_, i) => 60 + i)
+    rotary:    Array.from({ length: 12 }, (_, i) => 60 + i),
+    rotaryCCW: Array.from({ length: 12 }, (_, i) => 72 + i)  // default CCW notes = CW + 12
 };
 let wheelDegPerStepServer = { ...defaultWheelDegPerStep };
 let ballCalibrationServer = {
@@ -99,7 +103,8 @@ let ballCalibrationServer = {
 };
 let controlMidiNotes = {
     button: {},
-    rotary: [...defaultControlMidiNotes.rotary]
+    rotary:    [...defaultControlMidiNotes.rotary],
+    rotaryCCW: [...defaultControlMidiNotes.rotaryCCW]
 };
 
 function loadCalibration() {
@@ -145,7 +150,23 @@ function loadCalibration() {
                     }
                 }
             }
+
+            const rotaryCCWMap = noteParsed.rotaryCCW;
+            if (Array.isArray(rotaryCCWMap) && rotaryCCWMap.length === 12) {
+                for (let i = 0; i < 12; i++) {
+                    const n = Number(rotaryCCWMap[i]);
+                    if (Number.isFinite(n) && n >= 0 && n <= 127) {
+                        controlMidiNotes.rotaryCCW[i] = Math.round(n);
+                    }
+                }
+            }
         }
+
+        const velMin = Number(parsed?.rotaryVelMin);
+        const velMax = Number(parsed?.rotaryVelMax);
+        if (Number.isFinite(velMin) && velMin >= 1) rotaryVelMin = velMin;
+        if (Number.isFinite(velMax) && velMax > rotaryVelMin) rotaryVelMax = velMax;
+        recomputeRotaryLogScale();
 
         const ballParsed = parsed?.ballCalibration;
         ['left', 'center', 'right'].forEach((id) => {
@@ -175,6 +196,8 @@ function saveCalibration() {
             calibrationFile,
             JSON.stringify({
                 rotaryUnitsPerDetent,
+                rotaryVelMin,
+                rotaryVelMax,
                 wheelDegPerStep: wheelDegPerStepServer,
                 ballCalibration: ballCalibrationServer,
                 controlMidiNotes
@@ -382,33 +405,36 @@ function parseTrackballReport(data) {
         try { rawY = data.readInt32LE(zone.ballY); } catch(e) {}
         try { wheel = data.readInt16LE(zone.wheel); } catch(e) {}
 
-        // Ball - apply speed scale to raw values
-        const scaledRawX = rawX * speedScales.ball[zone.id];
-        const scaledRawY = rawY * speedScales.ball[zone.id];
-        const x = Math.round(scaledRawX / 4096);
-        const y = Math.round(scaledRawY / 4096);
+        const x = Math.round(rawX / 4096);
+        const y = Math.round(rawY / 4096);
 
-        // Log ALL trackball data for debugging
         logToFile(`[TRK] ${zone.id}: x=${x} y=${y} rawX=${rawX} rawY=${rawY} wheel=${wheel}`);
 
-        // Ball - no threshold for debugging, log everything
+        // ── Ball — relative CC per axis per zone ────────────────────────────
+        // CC layout: left X/Y = 1/2, center X/Y = 3/4, right X/Y = 5/6
         if (x !== 0 || y !== 0) {
-            const event = { type: 'trackball', id: zone.id, x: x, y: y, rawX: rawX, rawY: rawY };
+            const zoneBase = zone.id === 'left' ? 1 : zone.id === 'center' ? 3 : 5;
+            const toRelCC = v => v === 0 ? 0 : v > 0
+                ? Math.min(63, Math.max(1, Math.abs(v)))
+                : 128 - Math.min(63, Math.max(1, Math.abs(v)));
+            const ccX = toRelCC(x);
+            const ccY = toRelCC(y);
+            if (x !== 0) sendMidi('cc', 0, zoneBase,     ccX);
+            if (y !== 0) sendMidi('cc', 0, zoneBase + 1, ccY);
+
+            const event = { type: 'trackball', id: zone.id, x, y, rawX, rawY };
             broadcast(event);
             logEvent(event);
-            // MIDI CC for trackball position with speed scale already applied in x/y
-            sendMidi('cc', 0, 1, Math.min(127, Math.abs(x)));
-            sendMidi('cc', 0, 2, Math.min(127, Math.abs(y)));
         }
-        
-        // Wheel - log all wheel data
+
+        // ── Wheel — relative CC proportional to degrees rotated ─────────────
+        // CC layout: left = 7, center = 8, right = 9
         if (wheel !== 0) {
             const lastWheel = wheelPositions[zone.id] || 0;
             wheelPositions[zone.id] = wheel;
 
             const delta = normalizeDelta16(wheel);
-            const scaledDelta = delta * speedScales.wheel[zone.id];
-            const steps = Math.round(Math.abs(scaledDelta) / 4096);
+            const steps = Math.round(Math.abs(delta) / 4096);
             let direction = delta > 0 ? 1 : -1;
 
             const now = Date.now();
@@ -423,76 +449,110 @@ function parseTrackballReport(data) {
             }
 
             if (steps > 0) {
-                logToFile(`[WHL] ${zone.id}: wheel=${wheel} last=${lastWheel} delta=${delta} steps=${steps} dir=${direction}`);
+                const degrees = steps * (wheelDegPerStepServer[zone.id] || 1);
+                // 360° = CC 63 (full relative range for one full rotation)
+                const ccMag = Math.min(63, Math.max(1, Math.round(degrees * 63 / 360)));
+                const ccVal = direction > 0 ? ccMag : 128 - ccMag;
+                const ccNum = zone.id === 'left' ? 7 : zone.id === 'center' ? 8 : 9;
 
-                const zoneIndex = zone.id === 'left' ? 0 : zone.id === 'center' ? 1 : 2;
-                wheelValues[zoneIndex] = Math.max(0, Math.min(127, wheelValues[zoneIndex] + (direction * WHEEL_STEP * Math.min(steps, 5))));
+                logToFile(`[WHL] ${zone.id}: steps=${steps} deg=${degrees.toFixed(2)} ccMag=${ccMag} ccVal=${ccVal}`);
 
-                const event = { type: 'jog', id: zone.id, value: direction * WHEEL_STEP, raw: wheel, delta: delta, steps: steps };
+                const event = { type: 'jog', id: zone.id, value: direction, raw: wheel, delta, steps };
                 broadcast(event);
                 logEvent(event);
-                sendMidi('cc', 0, 0, wheelValues[zoneIndex]);
+                sendMidi('cc', 0, ccNum, ccVal);
             }
         }
     }
 }
 
-const UNITS_PER_DETENT = 360;
+// ── Rotary velocity calibration ──────────────────────────────────────────────
+// rotaryVelMin/Max and recomputeRotaryLogScale() are declared near the top of
+// the file so loadCalibration() can update bounds before any encoder events fire.
+
+// Active calibration session state
+let rotaryVelCalib = {
+    active: false,
+    phase: null,           // 'slow' | 'fast'
+    observedMin: Infinity,
+    observedMax: 0
+};
+
+// Direction hysteresis — require DIRECTION_CONFIRM consecutive frames agreeing
+// on a new direction before accepting the flip. Prevents false reversals.
+const DIRECTION_CONFIRM = 2;
+let rotaryDirConfirmed    = new Array(12).fill(0); // 1=CW, -1=CCW, 0=unknown
+let rotaryDirPending      = new Array(12).fill(0);
+let rotaryDirPendingCount = new Array(12).fill(0);
 
 let rotaryLastRaw = new Array(12).fill(0);
-let rotaryPosition = new Array(12).fill(0); // Synthetic position
 
-// Parse encoder report (ID 06) - TREAT RAW AS VELOCITY
+// Parse encoder report (ID 06) — rotation-proportional relative CC.
+// CC number = controlMidiNotes.rotary[i]. Direction + magnitude in CC value:
+//   CW = 1–63, CCW = 65–127 (2's-complement relative encoding).
+// Magnitude ∝ physical rotation per poll → total CC delta for a fixed angle is
+// constant regardless of turning speed.
 function parseEncoderReport(data) {
     for (let i = 0; i < 12; i++) {
         const offset = 1 + i * 4;
         if (offset + 1 >= data.length) break;
-        
-        // Read raw velocity value
+
         const raw = data.readUInt16LE(offset);
-        
-        // Skip if same as last (no movement)
         if (raw === rotaryLastRaw[i]) continue;
-        
-        // Calculate velocity (delta from zero center)
-        // Values > 32768 are negative (two's complement)
-        let velocity = raw;
-        if (velocity > 32768) velocity -= 65536;
-        
-        // Apply speed scale to velocity
-        velocity = velocity * speedScales.rotary[i];
-        
-        // Skip tiny noise
+
+        // Two's-complement signed velocity
+        let velocity = raw > 32768 ? raw - 65536 : raw;
+
+        // Skip electrical noise
         if (Math.abs(velocity) < 90) continue;
-        
-        // Accumulate to synthetic position
-        rotaryPosition[i] += velocity;
-        
-        // Calculate detents from position
-        const detents = Math.trunc(rotaryPosition[i] / 360);
-        
-        if (detents !== 0) {
-            // Consume detents
-            rotaryPosition[i] -= detents * 360;
-            
-            // Send MIDI with speed scale applied
-            const scaledStep = ROTARY_STEP * speedScales.rotary[i];
-            rotaryValues[i] = Math.max(0, Math.min(127, rotaryValues[i] + (detents * scaledStep)));
-            const note = Number.isFinite(controlMidiNotes.rotary[i]) ? controlMidiNotes.rotary[i] : (60 + i);
-            sendMidi('note', 0, note, rotaryValues[i]);
-            
-            logToFile(`[ROTARY] id=${i} vel=${velocity} pos=${rotaryPosition[i]} detents=${detents}`);
+
+        // ── Direction hysteresis ────────────────────────────────────────────
+        const sign = velocity > 0 ? 1 : -1;
+        if (sign !== rotaryDirConfirmed[i] && rotaryDirConfirmed[i] !== 0) {
+            // Potential direction flip — require confirmation
+            if (sign === rotaryDirPending[i]) {
+                rotaryDirPendingCount[i]++;
+            } else {
+                rotaryDirPending[i] = sign;
+                rotaryDirPendingCount[i] = 1;
+            }
+            if (rotaryDirPendingCount[i] < DIRECTION_CONFIRM) {
+                rotaryLastRaw[i] = raw; // advance lastRaw so we don't stall
+                continue;              // suppress until confirmed
+            }
         }
-        
+        rotaryDirConfirmed[i] = sign;
+        rotaryDirPending[i] = 0;
+        rotaryDirPendingCount[i] = 0;
+
+        // ── Velocity calibration recording ──────────────────────────────────
+        const absV = Math.abs(velocity);
+        if (rotaryVelCalib.active) {
+            if (rotaryVelCalib.phase === 'slow') {
+                rotaryVelCalib.observedMin = Math.min(rotaryVelCalib.observedMin, absV);
+            } else if (rotaryVelCalib.phase === 'fast') {
+                rotaryVelCalib.observedMax = Math.max(rotaryVelCalib.observedMax, absV);
+            }
+        }
+
+        // ── Rotation-proportional relative CC ───────────────────────────────
+        // ccMag scales linearly with velocity (= physical rotation per poll).
+        // total CC change for a fixed rotation angle is constant regardless of speed.
+        const ccMag = Math.min(63, Math.max(1, Math.round(absV * 63 / rotaryVelMax)));
+        // Relative CC encoding: CW = 1–63, CCW = 65–127 (standard 2's-complement style)
+        const ccVal = sign > 0 ? ccMag : 128 - ccMag;
+        const ccNum = Number.isFinite(controlMidiNotes.rotary[i]) ? controlMidiNotes.rotary[i] : (60 + i);
+        sendMidi('cc', 0, ccNum, ccVal);
+
         rotaryLastRaw[i] = raw;
-        
-        // Broadcast to UI - send velocity as delta for UI compatibility
-        broadcast({ 
-            type: 'encoder', 
-            id: i, 
+        logToFile(`[ROTARY] id=${i} vel=${velocity} dir=${sign > 0 ? 'CW' : 'CCW'} ccMag=${ccMag} ccVal=${ccVal} cc=${ccNum}`);
+
+        broadcast({
+            type: 'encoder',
+            id: i,
             delta: velocity,
-            detents: detents || 0,
-            value: rotaryValues[i]
+            detents: sign * ccMag,
+            value: ccVal
         });
     }
 }
@@ -725,6 +785,12 @@ wss.on('connection', (ws) => {
                         saveCalibration();
                         broadcast({ type: 'controlMidiNoteMap', map: controlMidiNotes });
                     }
+                } else if (controlType === 'rotaryCCW' && Number.isFinite(id) && id >= 0 && id < 12) {
+                    if (note !== null && Number.isFinite(note) && note >= 0 && note <= 127) {
+                        controlMidiNotes.rotaryCCW[id] = Math.round(note);
+                        saveCalibration();
+                        broadcast({ type: 'controlMidiNoteMap', map: controlMidiNotes });
+                    }
                 }
             } else if (data.type === 'getControlMidiNoteMap') {
                 ws.send(JSON.stringify({ type: 'controlMidiNoteMap', map: controlMidiNotes }));
@@ -845,39 +911,52 @@ wss.on('connection', (ws) => {
                     wheelDegPerStep: wheelDegPerStepServer,
                     ballCalibration: ballCalibrationServer
                 }));
-            } else if (data.type === 'setSpeedScale') {
-                // Handle reset command
-                if (data.reset) {
-                    const which = data.reset;
-                    if (which === 'all' || which === 'rotary') {
-                        for (let i = 0; i < 12; i++) speedScales.rotary[i] = 1;
+            } else if (data.type === 'startRotaryVelCalib') {
+                // Begin a calibration recording session.
+                // phase: 'slow' — user turns knobs as slowly as possible
+                // phase: 'fast' — user turns knobs as fast as possible
+                const phase = data.phase === 'fast' ? 'fast' : 'slow';
+                rotaryVelCalib = {
+                    active: true,
+                    phase,
+                    observedMin: Infinity,
+                    observedMax: 0
+                };
+                logToFile(`[CAL-VEL] started phase=${phase}`);
+                broadcast({ type: 'rotaryVelCalibStatus', active: true, phase });
+
+            } else if (data.type === 'stopRotaryVelCalib') {
+                // Stop recording and apply the observed bound.
+                if (rotaryVelCalib.active) {
+                    const { phase, observedMin, observedMax } = rotaryVelCalib;
+                    rotaryVelCalib.active = false;
+
+                    let updated = false;
+                    if (phase === 'slow' && Number.isFinite(observedMin) && observedMin >= 1) {
+                        rotaryVelMin = observedMin;
+                        updated = true;
+                        logToFile(`[CAL-VEL] slow done → rotaryVelMin=${rotaryVelMin}`);
+                    } else if (phase === 'fast' && observedMax > 0) {
+                        rotaryVelMax = observedMax;
+                        updated = true;
+                        logToFile(`[CAL-VEL] fast done → rotaryVelMax=${rotaryVelMax}`);
                     }
-                    if (which === 'all' || which === 'wheel') {
-                        speedScales.wheel = { left: 1, center: 1, right: 1 };
+
+                    if (updated && rotaryVelMax > rotaryVelMin) {
+                        recomputeRotaryLogScale();
+                        saveCalibration();
+                        logToFile(`[CAL-VEL] recomputed: K=${_rlogK.toFixed(4)} B=${_rlogB.toFixed(4)}`);
                     }
-                    if (which === 'all' || which === 'ball') {
-                        speedScales.ball = { left: 1, center: 1, right: 1 };
-                    }
-                    logToFile(`[SPEED] Reset ${which} to 1.0x`);
-                } else {
-                    // Handle individual speed scale update
-                    const controlType = data.controlType;
-                    const id = data.id;
-                    const value = Number(data.value);
-                    
-                    if (Number.isFinite(value) && value >= 0.1 && value <= 5) {
-                        if (controlType === 'rotary' && id >= 0 && id < 12) {
-                            speedScales.rotary[id] = value;
-                            logToFile(`[SPEED] rotary ${id} = ${value.toFixed(1)}x`);
-                        } else if (controlType === 'wheel' && ['left', 'center', 'right'].includes(id)) {
-                            speedScales.wheel[id] = value;
-                            logToFile(`[SPEED] wheel ${id} = ${value.toFixed(1)}x`);
-                        } else if (controlType === 'ball' && ['left', 'center', 'right'].includes(id)) {
-                            speedScales.ball[id] = value;
-                            logToFile(`[SPEED] ball ${id} = ${value.toFixed(1)}x`);
-                        }
-                    }
+
+                    broadcast({
+                        type: 'rotaryVelCalibStatus',
+                        active: false,
+                        phase,
+                        rotaryVelMin,
+                        rotaryVelMax
+                    });
                 }
+
             }
         } catch(e) {}
     });
