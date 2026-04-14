@@ -299,6 +299,17 @@
                 </div>
             </div>
             <div class="panel-section">
+                <h3 onclick="togglePanel(this)">Backlight</h3>
+                <div class="panel-content">
+                <div style="display:flex;align-items:center;gap:8px;margin:6px 0;">
+                    <input type="range" id="backlightSlider" min="0" max="100" value="100"
+                        style="flex:1;accent-color:#fea701;"
+                        oninput="document.getElementById('backlightVal').textContent=this.value+'%'; ws.send(JSON.stringify({type:'setBacklight',value:parseInt(this.value)}))">
+                    <span id="backlightVal" style="font-size:11px;min-width:32px;text-align:right;color:#aaa;">100%</span>
+                </div>
+                </div>
+            </div>
+            <div class="panel-section">
                 <h3 onclick="togglePanel(this)">Calibration</h3>
                 <div class="panel-content">
                 <div class="section-subtitle">Wheel 360</div>
@@ -508,7 +519,8 @@
                     <button id="appleDlsToggle" onclick="toggleAppleDlsSynth()">Apple DLS OFF</button>
                 </div>
                 <div id="appleDlsStatus" class="status-note">Apple DLS Synth: off</div>
-                <div class="status-note">Click any SVG button/rotary to assign MIDI note</div>
+
+<div class="status-note">Click any SVG button/rotary to assign MIDI note</div>
                 </div>
             </div>
 
@@ -721,6 +733,12 @@
             }
             else if (data.type === 'midiDeviceChanged') {
                 log('MIDI device: ' + data.name);
+            }
+            else if (data.type === 'backlight') {
+                const slider = document.getElementById('backlightSlider');
+                const label = document.getElementById('backlightVal');
+                if (slider) slider.value = data.value;
+                if (label) label.textContent = data.value + '%';
             }
             else if (data.type === 'midiChannel') {
                 const ch = Number(data.value);

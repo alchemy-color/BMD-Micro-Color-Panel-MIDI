@@ -770,6 +770,7 @@ wss.on('connection', (ws) => {
     
     // Send server info so client can cache the correct node path for the "how to run" banner
     ws.send(JSON.stringify({ type: 'serverInfo', nodePath: process.execPath, serverDir: process.cwd() }));
+    ws.send(JSON.stringify({ type: 'backlight', value: currentBrightness }));
 
     // Send MIDI ports list to new client
     ws.send(JSON.stringify({ type: 'midiPorts', ports: midiPorts }));
@@ -793,6 +794,7 @@ wss.on('connection', (ws) => {
                 lightsOn = b > 0;
                 device.controlTransfer(0x21, 0x09, 0x030a, 0x0002, Buffer.from([0x0a, 0x01]));
                 device.controlTransfer(0x21, 0x09, 0x0303, 0x0002, Buffer.from([0x03, b, b]));
+                broadcast({ type: 'backlight', value: b });
             } else if (data.type === 'setMidiDevice') {
                 const idx = parseInt(data.index);
                 if (idx >= 0 && idx < midiPorts.length && JZZ) {
