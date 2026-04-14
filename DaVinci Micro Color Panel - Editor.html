@@ -264,6 +264,18 @@
     </style>
 </head>
 <body>
+    <div id="serverBanner" style="display:none;background:#1a1a1a;border-bottom:2px solid #c62828;padding:10px 16px;font-size:12px;color:#eee;line-height:2;">
+        <strong style="color:#ef5350;">Server not running.</strong>
+        Open Terminal and run these commands:<br>
+        <span style="color:#aaa;">① Install Homebrew if missing:</span><br>
+        <code style="display:inline-block;padding:3px 8px;background:#111;border-radius:3px;font-size:11px;user-select:all;color:#fea701;">/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"</code><br>
+        <span style="color:#aaa;">② Install Node.js if missing:</span><br>
+        <code style="display:inline-block;padding:3px 8px;background:#111;border-radius:3px;font-size:11px;user-select:all;color:#fea701;">brew install node</code><br>
+        <span style="color:#aaa;">③ Install dependencies (first time only):</span><br>
+        <code id="serverCmdInstall" style="display:inline-block;padding:3px 8px;background:#111;border-radius:3px;font-size:11px;user-select:all;color:#fea701;"></code><br>
+        <span style="color:#aaa;">④ Start the server:</span><br>
+        <code id="serverCmd" style="display:inline-block;padding:3px 8px;background:#111;border-radius:3px;font-size:11px;user-select:all;color:#fea701;"></code>
+    </div>
     <div class="header">
         <div style="display:flex;align-items:center;gap:15px;">
             <h1>DaVinci Micro Color Panel</h1>
@@ -567,34 +579,63 @@
         let activeEditMode = 'off';
         let controlMidiNoteMap = { button: {}, rotary: [] };
         
-        // Create WebSocket connection
-        const ws = new WebSocket('ws://localhost:8765');
-        
-        ws.onopen = () => {
-            wsConnected = true;
-            document.getElementById('status').textContent = 'Connected';
-            document.getElementById('status').className = 'status connected';
-            log('WebSocket connected to server');
-            loadPresets();
-            ws.send(JSON.stringify({ type: 'getCalibrationAll' }));
-            ws.send(JSON.stringify({ type: 'getControlMidiNoteMap' }));
-        };
-        
-        ws.onclose = () => {
-            wsConnected = false;
-            document.getElementById('status').textContent = 'Disconnected';
-            document.getElementById('status').className = 'status disconnected';
-            log('WebSocket disconnected');
-            // Retry after 3 seconds
-            setTimeout(() => {
-                log('Reconnecting...');
-                ws.open();
-            }, 3000);
-        };
-        
-        ws.onerror = (err) => {
-            log('WS Error - check server is running');
-        };
+        // Derive server directory for the "how to run" banner
+        function getServerCmd() {
+            const nodePath = localStorage.getItem('serverNodePath') || 'node';
+            const serverDir = localStorage.getItem('serverDir') ||
+                (window.location.protocol === 'file:'
+                    ? decodeURIComponent(window.location.pathname.split('/').slice(0, -1).join('/'))
+                    : null);
+            if (serverDir) return `sudo "${nodePath}" "${serverDir}/server.mjs"`;
+            return `sudo "${nodePath}" server.mjs`;
+        }
+
+        function setServerBanner(visible) {
+            const banner = document.getElementById('serverBanner');
+            if (banner) {
+                banner.style.display = visible ? 'block' : 'none';
+                const serverDir = localStorage.getItem('serverDir') ||
+                    (window.location.protocol === 'file:'
+                        ? decodeURIComponent(window.location.pathname.split('/').slice(0, -1).join('/'))
+                        : null);
+                const installCmd = serverDir ? `cd "${serverDir}" && npm install` : 'npm install';
+                document.getElementById('serverCmdInstall').textContent = installCmd;
+                document.getElementById('serverCmd').textContent = getServerCmd();
+            }
+        }
+
+        // WebSocket — auto-reconnects on close/error
+        let ws;
+        function connectWS() {
+            const host = window.location.hostname || 'localhost';
+            ws = new WebSocket(`ws://${host}:8765`);
+
+            ws.onopen = () => {
+                wsConnected = true;
+                document.getElementById('status').textContent = 'Connected';
+                document.getElementById('status').className = 'status connected';
+                setServerBanner(false);
+                log('WebSocket connected to server');
+                loadPresets();
+                ws.send(JSON.stringify({ type: 'getCalibrationAll' }));
+                ws.send(JSON.stringify({ type: 'getControlMidiNoteMap' }));
+            };
+
+            ws.onclose = () => {
+                wsConnected = false;
+                document.getElementById('status').textContent = 'Disconnected';
+                document.getElementById('status').className = 'status disconnected';
+                setServerBanner(true);
+                updateServerToggleBtn(false);
+                log('WebSocket disconnected — retrying in 3s…');
+                setTimeout(connectWS, 3000);
+            };
+
+            ws.onerror = () => {
+                // onclose fires after onerror, so reconnect is handled there
+            };
+        }
+        connectWS();
         
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
@@ -605,6 +646,12 @@
                 return;
             }
             
+            if (data.type === 'serverInfo') {
+                if (data.nodePath) localStorage.setItem('serverNodePath', data.nodePath);
+                if (data.serverDir) localStorage.setItem('serverDir', data.serverDir);
+                return;
+            }
+
             if (data.type === 'connected') {
                 log('Panel connected!');
                 return;
@@ -780,6 +827,7 @@
                     rotaryUnitsPerDetent[id] = v;
                 }
             }
+
         };
         
         // Octave buttons
@@ -1636,6 +1684,7 @@
             const section = header.closest('.panel-section');
             section.classList.toggle('collapsed');
         }
+
 
         function prependLogLine(el, msg, maxLines) {
             const lines = el.innerHTML.split('<br>').filter(Boolean);

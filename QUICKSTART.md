@@ -2,85 +2,109 @@
 
 ## What is this?
 
-This lets you use your BlackMagic DaVinci Resolve Micro Color Panel with other apps like Lightroom or Logic Pro by converting panel movements into MIDI signals.
+This lets you use your Blackmagic DaVinci Resolve Micro Color Panel with other apps like Lightroom, Logic Pro, or any MIDI-compatible software, by converting panel movements into MIDI signals.
 
-## Step 1: Install
+---
 
-1. Install Node.js from https://nodejs.org (LTS version)
-2. Download this repository:
-   ```bash
-   git clone https://github.com/alchemy-color/BMD-Micro-Color-Panel-MIDI.git
-   cd BMD-Micro-Color-Panel-MIDI
-   ```
-3. Install dependencies:
-   ```bash
-   npm install
-   ```
+## Step 1: Install Node.js
 
-## Step 2: Connect Panel
-
-1. Plug your Micro Color Panel into your Mac via USB
-2. Turn on your Mac (panel gets power from Mac)
-
-## Step 3: Run Server
-
-Open Terminal and run:
-
+**macOS:**
 ```bash
-sudo npm start
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+brew install node
 ```
 
-⚠️ **Important**: You must use `sudo` because the panel needs admin access to read USB.
+**Windows:** Download the installer from [nodejs.org](https://nodejs.org) (LTS version).
 
-## Step 4: Open Web Interface
+---
 
-1. Open a browser
-2. Go to: http://localhost:8766
-3. You should see your panel!
+## Step 2: Get the project
 
-## Step 5: Set Up MIDI (for Lightroom)
+```bash
+git clone https://github.com/alchemy-color/BMD-Micro-Color-Panel-MIDI.git
+cd BMD-Micro-Color-Panel-MIDI
+npm install
+```
 
-1. **Enable IAC Driver** (Mac only):
-   - Open "Audio MIDI Setup" (search in Spotlight)
-   - Open Window → Show MIDI Devices
-  . Check that "IAC Driver" is enabled (double-click to turn on)
+---
 
-2. **Set up MIDI2LR**:
-   - Download MIDI2LR from https://rsjacobsen.gumroad.com/l/midi2lr
-   - In MIDI2LR, go to Settings → Import Settings
-   - Select `presets/MicroPanel_LR.xml`
-   - Choose "IAC Driver" as your MIDI input
+## Step 3: Connect the panel
 
-3. **In our app**:
-   - Click the ↻ button next to MIDI device dropdown
-   - Select "IAC Driver"
-   - Click "Lightroom" preset
+Plug the Micro Color Panel into your computer via USB.
 
-## Step 6: Use in Lightroom
+---
 
-Now your panel controls Lightroom:
+## Step 4: Start the server
 
-| Control | Action |
-|---------|--------|
-| Left knob (Contrast) | Adjust Contrast |
-| RWD button | Previous Photo |
-| FWD button | Next Photo |
+**macOS:**
+```bash
+sudo node server.mjs
+```
+
+**Windows:** Open Terminal or PowerShell as Administrator, then:
+```
+node server.mjs
+```
+
+> `sudo` / Administrator is required for USB HID access. The browser will open automatically at http://localhost:8766.
+
+If the browser does not open, navigate there manually. If the server is not running, the GUI will display the exact command needed to start it.
+
+---
+
+## Step 5: Set up a virtual MIDI port
+
+The panel sends MIDI to other apps via a virtual MIDI port.
+
+**macOS — enable IAC Driver:**
+1. Open **Audio MIDI Setup** (search in Spotlight)
+2. Go to **Window → Show MIDI Studio**
+3. Double-click **IAC Driver** and tick **Device is online**
+
+**Windows — install loopMIDI:**
+1. Download [loopMIDI](https://www.tobias-erichsen.de/software/loopmidi.html)
+2. Create a new virtual port (click **+**)
+
+---
+
+## Step 6: Select the MIDI device in the GUI
+
+1. Open the **MIDI Options** panel on the right sidebar
+2. Click **↻** to refresh the device list
+3. Select **IAC Driver Bus 1** (macOS) or your loopMIDI port (Windows)
+
+---
+
+## Step 7: Use with your app
+
+The panel now outputs MIDI CC messages to your chosen virtual port. Connect that port as a MIDI input in your app:
+
+- **Lightroom / MIDI2LR** — import `presets/MicroPanel_LR.xml` into MIDI2LR and set its input to IAC Driver Bus 1
+- **Logic Pro** — add the IAC Driver port as an external MIDI input
+- **Any DAW** — map incoming CC 60–71 (rotary knobs), CC 7–9 (jog wheels), CC 1–6 (trackballs)
+
+---
 
 ## Troubleshooting
 
-**"No MIDI outputs found"**
-- Click ↻ button to refresh
-- Make sure IAC Driver is enabled in Audio MIDI Setup
+**GUI shows "Server not running" banner**
+- Follow the commands shown in the banner — they are generated for your machine automatically
 
-**"Panel not detected"**
-- Make sure panel is connected via USB
-- Make sure you're running with `sudo`
+**Panel not detected**
+- Make sure the USB cable is connected before starting the server
+- Confirm you are running with `sudo` (macOS) or as Administrator (Windows)
+- On Windows, the panel USB driver must be replaced with WinUSB via [Zadig](https://zadig.akeo.ie/) first
 
-**"Web page won't load"**
-- Make sure server is running (Terminal window should be open)
-- Go to http://localhost:8766 (not https)
+**No MIDI output**
+- Check that IAC Driver (macOS) or loopMIDI (Windows) is active
+- Confirm the correct device is selected in MIDI Options and MIDI is enabled
 
-## Need Help?
+**Web page won't load**
+- Confirm the server is running in Terminal
+- Navigate to http://localhost:8766 (not https)
 
-- Check full documentation in README.md
-- Open an issue on GitHub: https://github.com/alchemy-color/BMD-Micro-Color-Panel-MIDI
+---
+
+## Need help?
+
+See full documentation in [README.md](README.md) or open an issue at https://github.com/alchemy-color/BMD-Micro-Color-Panel-MIDI

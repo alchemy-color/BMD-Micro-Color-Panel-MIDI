@@ -14,9 +14,9 @@
     360
   ],
   "wheelDegPerStep": {
-    "left": 1.196,
-    "center": 1.272,
-    "right": 1.494
+    "left": 1.367,
+    "center": 1.454,
+    "right": 1.708
   },
   "ballCalibration": {
     "left": {

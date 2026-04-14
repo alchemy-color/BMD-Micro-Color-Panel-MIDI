@@ -4,6 +4,7 @@ import http from 'http';
 import fs from 'fs';
 import path from 'path';
 import { exec } from 'child_process';
+import { createHash } from 'crypto';
 
 // Debug logging to file
 const logFile = fs.createWriteStream('./debug.log', { flags: 'a' });
@@ -15,6 +16,50 @@ function logToFile(msg) {
 function dbg(line) { logToFile(`[DBG] ${line}`); }
 
 function logEvent(data) { logToFile(`[EVT] ${JSON.stringify(data)}`); }
+
+// ── HTTP Basic Auth ───────────────────────────────────────────────────────────
+const authFile = path.join(process.cwd(), 'auth.json');
+let authPasswordHash = null;
+
+function loadAuth() {
+    try {
+        if (fs.existsSync(authFile)) {
+            const parsed = JSON.parse(fs.readFileSync(authFile, 'utf8'));
+            authPasswordHash = parsed.passwordHash || null;
+        }
+    } catch (e) {}
+    if (authPasswordHash) {
+        console.log('🔒 Password protection enabled');
+    } else {
+        console.log('🔓 No password set — GUI is open access');
+    }
+}
+
+function saveAuth() {
+    fs.writeFileSync(authFile, JSON.stringify({ passwordHash: authPasswordHash }, null, 2));
+}
+
+function hashPassword(pw) {
+    return createHash('sha256').update(pw).digest('hex');
+}
+
+function checkAuth(req, res) {
+    if (!authPasswordHash) return true;
+    const header = req.headers['authorization'];
+    if (header && header.startsWith('Basic ')) {
+        const decoded = Buffer.from(header.slice(6), 'base64').toString('utf8');
+        const password = decoded.includes(':') ? decoded.split(':').slice(1).join(':') : decoded;
+        if (hashPassword(password) === authPasswordHash) return true;
+    }
+    res.writeHead(401, {
+        'WWW-Authenticate': 'Basic realm="Micro Color Panel"',
+        'Content-Type': 'text/plain'
+    });
+    res.end('Authentication required');
+    return false;
+}
+
+loadAuth();
 
 console.log('🎛️ DaVinci Micro Color Panel - Web GUI Server');
 console.log('='.repeat(50));
@@ -589,7 +634,9 @@ const httpServer = http.createServer((req, res) => {
         res.end();
         return;
     }
-    
+
+    if (!checkAuth(req, res)) return;
+
     // Serve GUI files
     if (req.method === 'GET' && (req.url === '/' || req.url === '/gui.html' || req.url === '/index.html')) {
         try {
@@ -721,6 +768,9 @@ wss.on('connection', (ws) => {
     console.log('🔌 Client connected! Total:', clients.size);
     ws.send(JSON.stringify({ type: 'connected' }));
     
+    // Send server info so client can cache the correct node path for the "how to run" banner
+    ws.send(JSON.stringify({ type: 'serverInfo', nodePath: process.execPath, serverDir: process.cwd() }));
+
     // Send MIDI ports list to new client
     ws.send(JSON.stringify({ type: 'midiPorts', ports: midiPorts }));
     ws.send(JSON.stringify({ type: 'rotaryCalibrationAll', unitsPerDetent: rotaryUnitsPerDetent }));
@@ -957,6 +1007,25 @@ wss.on('connection', (ws) => {
                     });
                 }
 
+            } else if (data.type === 'setPassword') {
+                const { currentPassword, newPassword } = data;
+                // If a password is currently set, the correct current password is required
+                if (authPasswordHash && hashPassword(String(currentPassword || '')) !== authPasswordHash) {
+                    ws.send(JSON.stringify({ type: 'passwordResult', success: false, error: 'Incorrect current password' }));
+                    return;
+                }
+                if (newPassword) {
+                    authPasswordHash = hashPassword(String(newPassword));
+                    saveAuth();
+                    logToFile('[AUTH] Password updated');
+                    ws.send(JSON.stringify({ type: 'passwordResult', success: true, message: 'Password set — reload to re-authenticate' }));
+                } else {
+                    // Empty newPassword = remove auth
+                    authPasswordHash = null;
+                    saveAuth();
+                    logToFile('[AUTH] Password removed');
+                    ws.send(JSON.stringify({ type: 'passwordResult', success: true, message: 'Password removed' }));
+                }
             }
         } catch(e) {}
     });

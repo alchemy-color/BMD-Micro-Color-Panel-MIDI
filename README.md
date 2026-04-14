@@ -1,126 +1,181 @@
 # BMD Micro Color Panel MIDI Controller
 
+![UI](UI.png)
 
-
-Turn your Blackmagic DaVinci Resolve Micro Color Panel into a fully customizable MIDI controller. Web-based GUI with per-control speed scaling, MIDI mapping, and preset management.
+Turn your Blackmagic DaVinci Resolve Micro Color Panel into a fully customisable MIDI controller. Web-based GUI with real-time visual feedback, MIDI mapping, calibration, and preset management.
 
 > **Inspiration**: This project is a derivative of [micro-color-panel-controller](https://github.com/ra100/micro-color-panel-controller) by [ra100](https://github.com/ra100). That project provided the foundation for reverse-engineering the panel's HID protocol.
 
 ## Features
 
-- **USB HID Control** - Connects directly to BMD Micro Color Panel (USB PID 0xda0f)
-- **Web GUI** - Visual panel representation at http://localhost:8766 with real-time feedback
-- **MIDI Output** - Send notes/CC to DAWs like Logic Pro or Lightroom via MIDI2LR
-- **Speed Scale Controls** - Individual 0.1x-5x sensitivity sliders for all 12 rotaries, 3 jog wheels, and 3 trackballs
-- **MIDI Mapping** - Click any control in MIDI Map mode to assign custom MIDI notes
-- **Label Presets** - Save and switch between custom button/rotary/wheel/ball label layouts
-- **Preset System** - Save/load/export custom MIDI mappings
-- **Real-time Calibration** - Adjust rotary units per detent, wheel degrees per step, and trackball sensitivity
+- **USB HID Control** — Connects directly to BMD Micro Color Panel (USB PID 0xda0f)
+- **Web GUI** — Visual panel representation at http://localhost:8766 with real-time feedback
+- **Relative CC MIDI Output** — All continuous controls (rotaries, jog wheels, trackballs) output relative CC messages proportional to physical movement
+- **MIDI Mapping** — Click any control in MIDI Map mode to assign custom CC/note numbers
+- **Label Presets** — Save and switch between custom button/rotary/wheel/ball label layouts
+- **Preset System** — Save/load/export complete MIDI mappings
+- **Calibration** — Fine-tune rotary, wheel, and trackball sensitivity per control
+
+## Platform Support
+
+This project was developed and tested on **macOS**. It should work on Windows and Linux with the adjustments listed below, but these have not been verified.
 
 ## Requirements
 
-- macOS (Linux/Windows support can be added)
+- macOS (primary), Windows or Linux (untested)
 - Node.js 18+
-- **sudo** for USB HID access
+- **sudo** (macOS/Linux) or **Administrator** (Windows) for USB HID access
 
 ## Installation
 
+Open Terminal and run these steps in order:
+
+**① Install Homebrew** (if not already installed)
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+**② Install Node.js** (if not already installed)
+```bash
+brew install node
+```
+
+**③ Install dependencies** (first time only, run from the project folder)
 ```bash
 cd BMD-Micro-Color-Panel-MIDI
 npm install
 ```
 
-## Usage
-
-1. Connect the BMD Micro Color Panel via USB
-2. Run the server with sudo:
-
+**④ Start the server**
 ```bash
-sudo npm start
+sudo node server.mjs
 ```
 
-3. Open http://localhost:8766 in your browser
+> The server requires `sudo` for USB HID access. It will automatically open the GUI in your browser at http://localhost:8766.
 
-## MIDI Configuration
+If the browser doesn't open automatically, navigate to http://localhost:8766 manually. If the panel isn't connected, the GUI will display the exact commands needed to start the server.
+
+## Auto-start on Boot (macOS)
+
+To have the server start automatically at login, install it as a LaunchDaemon:
+
+```bash
+sudo cp com.bmd.microcolorpanel.plist /Library/LaunchDaemons/
+sudo launchctl load /Library/LaunchDaemons/com.bmd.microcolorpanel.plist
+```
+
+To stop/start manually:
+```bash
+sudo launchctl stop com.bmd.microcolorpanel
+sudo launchctl start com.bmd.microcolorpanel
+```
+
+To uninstall:
+```bash
+sudo launchctl unload /Library/LaunchDaemons/com.bmd.microcolorpanel.plist
+sudo rm /Library/LaunchDaemons/com.bmd.microcolorpanel.plist
+```
+
+## MIDI Output
+
+All continuous controls send **relative CC messages** — the CC value encodes direction and magnitude proportional to the physical movement:
+
+| Value range | Meaning |
+|-------------|---------|
+| 1–63 | Clockwise / positive (larger = faster) |
+| 65–127 | Counter-clockwise / negative (larger = faster) |
+| 64 | Unused (centre) |
 
 ### Default MIDI Assignments
 
 | Control | MIDI |
 |---------|------|
-| Rotary 0-11 | Notes 60-71 (C4-B4) |
-| Left Wheel | CC0 |
-| Center Wheel | CC0 |
-| Right Wheel | CC0 |
-| Trackballs | CC1 (X), CC2 (Y) |
-| Buttons 12-51 | Notes 1-40 |
+| Left Trackball X | CC 1 |
+| Left Trackball Y | CC 2 |
+| Centre Trackball X | CC 3 |
+| Centre Trackball Y | CC 4 |
+| Right Trackball X | CC 5 |
+| Right Trackball Y | CC 6 |
+| Left Jog Wheel | CC 7 |
+| Centre Jog Wheel | CC 8 |
+| Right Jog Wheel | CC 9 |
+| Rotary Knobs 1–12 | CC 60–71 |
+| Buttons 1–40 | Notes 1–40 |
 
-### For Lightroom
+CC numbers for rotaries and buttons can be reassigned per-control in the GUI's MIDI Map mode.
 
-Import `MicroPanel_LR.xml` into MIDI2LR:
+### MIDI Setup (macOS)
 
-| Control | Lightroom Action |
-|---------|------------------|
-| RWD | Previous Photo |
-| FWD | Next Photo |
-| Rotary 3 (Contrast) | Contrast |
-| Rotary 5 (Mid Detail) | Clarity |
-| Rotary 6 (Color Boost) | Vibrance |
-| Rotary 7 (Shadows) | Shadows |
-| Rotary 8 (Highlights) | Highlights |
-| Rotary 9 (Saturation) | Saturation |
+1. Open **Audio MIDI Setup** (in `/Applications/Utilities/`)
+2. Go to **Window → Show MIDI Studio**
+3. Double-click **IAC Driver** and enable it
+4. In the GUI, select **IAC Driver Bus 1** as the MIDI output device
 
-## Presets
+## Calibration
 
-- **Default** - Basic MIDI mapping
-- **Lightroom** - Optimized for Lightroom/MIDI2LR
-- **Logic Pro Transport** - Transport controls for Logic Pro
+The GUI includes calibration tools for each control type:
 
-### Creating Custom Presets
+- **Jog Wheel 360** — Turn the wheel one full revolution to calibrate degrees per step
+- **Rotary Knobs** — Turn any knob 180° to calibrate degrees per raw unit
+- **Trackballs** — Roll the ball to set axis signs and sensitivity gain
 
-1. Configure your desired button mappings in the UI
-2. Click "Save Current" to save your preset
-3. Presets are stored in the `presets/` folder
-
-## Settings
-
-Adjust sensitivity and mapping in the UI panels:
-
-- **Speed Scales** - Per-control sensitivity (0.1x to 5x) for rotary encoders, jog wheels, and trackballs
-- **Calibration** - Fine-tune rotary units per detent, wheel degrees per step, and trackball gain/dominance
-- **MIDI Map** - Click any control to assign custom MIDI notes
-- **Label Presets** - Rename and save custom label layouts for buttons and controls
+Calibration data is saved to `calibration.json` and reloaded on server start.
 
 ## Troubleshooting
 
 ### Panel not detected
-- Ensure USB cable is connected
-- Run with `sudo` (required for USB HID)
+- Ensure the USB cable is connected before starting the server
+- Run with `sudo` — USB HID access requires root on macOS
 
 ### MIDI not working
-- Enable IAC Driver in Audio MIDI Setup (Mac)
-- Use MIDI2LR to map MIDI to Lightroom commands
-- Import `presets/MicroPanel_LR.xml` into MIDI2LR
+- Check that IAC Driver is enabled in Audio MIDI Setup
+- Make sure the correct MIDI output device is selected in the GUI (MIDI Options panel)
+- Check the **MIDI Messages** panel in the GUI for real-time output confirmation
 
 ### Server won't start
-- Check if another instance is running
-- Verify no other process is using port 8765/8766
+- Check for another running instance: `sudo lsof -i :8765`
+- Verify nothing else is using ports 8765 or 8766
 
 ## Tech Stack
 
-- **Node.js** - Server runtime
-- **usb** - USB HID communication
-- **ws** - WebSocket server
-- **JZZ** - MIDI I/O
+- **Node.js** — Server runtime
+- **usb** — USB HID communication
+- **ws** — WebSocket server
+- **JZZ** — MIDI I/O
 
-## Known Issues & Limitations
+## Known Issues
 
-### Wheels
-- **Direction detection incomplete** - The wheel delta detection works but only registers -1 regardless of turn direction. The raw values show alternating patterns that haven't been fully resolved into reliable left/right differentiation.
+### Rotary Knobs — spurious direction reversal on fast spins
+When a knob is spun very quickly, the direction hysteresis filter can misread the peak velocity samples as a reversal, sending a brief burst of CC messages in the wrong direction before correcting. Slow to medium turns are reliable. A 2-frame confirmation buffer is in place; increasing it reduces false reversals at the cost of slightly delayed direction changes.
+
+### Apple DLS Synth activates when MIDI is enabled
+Enabling MIDI output via the toggle in the GUI will automatically switch to the Apple DLS Software Synthesiser if it is the first available MIDI device. To route MIDI to a DAW or MIDI2LR, ensure **IAC Driver Bus 1** is selected as the output device in the MIDI Options panel before enabling MIDI. The Apple DLS toggle in the GUI can also be used to explicitly switch between the synth and your chosen output device.
 
 ### General
-- **No MIDI input** - The panel only sends HID data; it cannot receive MIDI back. Values are accumulated client-side only.
-- **One-way communication** - Panel lights cannot be controlled from the server (attempts to set backlight have not succeeded).
-- **Platform limited** - Requires sudo for USB HID, currently tested on macOS.
+- **No MIDI input** — The panel only sends HID data; it cannot receive MIDI back
+- **One-way communication** — Panel button LEDs cannot be controlled from software
+- **Platform** — Requires `sudo` for USB HID; tested on macOS
+
+## Running on Windows
+
+> This project was built and tested on macOS. Windows support is theoretical — the steps below should work but have not been verified.
+
+**Additional one-time setup required:**
+
+1. **Install Node.js** — download the installer from [nodejs.org](https://nodejs.org) (no Homebrew needed)
+2. **Replace the USB driver** — the `usb` package requires libusb, which Windows doesn't use by default for HID devices:
+   - Download and run [Zadig](https://zadig.akeo.ie/)
+   - Select the BMD Micro Color Panel device
+   - Replace its driver with **WinUSB**
+   - ⚠️ This may prevent DaVinci Resolve from recognising the panel while the WinUSB driver is active
+3. **Virtual MIDI port** — macOS has a built-in IAC Driver; on Windows install [loopMIDI](https://www.tobias-erichsen.de/software/loopmidi.html) to create a virtual MIDI port
+4. **Run as Administrator** — open Terminal (or PowerShell) as Administrator instead of using `sudo`:
+   ```
+   node server.mjs
+   ```
+5. **Auto-start** — use Task Scheduler instead of LaunchDaemon to run the server at login
+
+Everything else (the web GUI, WebSocket, MIDI output) is platform-agnostic and should work without changes.
 
 ## Contributing
 
@@ -131,4 +186,4 @@ Adjust sensitivity and mapping in the UI panels:
 
 ## License
 
-MIT - see [LICENSE](LICENSE) file
+MIT — see [LICENSE](LICENSE) file
